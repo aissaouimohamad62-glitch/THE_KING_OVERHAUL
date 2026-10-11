@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSTEM INITIALIZATION | ASCENDING ALONE RPG</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // دالة تقوم بإعادة تحميل الصفحة
+        setInterval(function() {
+            location.reload();
+        }, 100000); // 1000 ميلي ثانية تعني ثانية واحدة
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index11.css">
+    <script src="monarch-core.js"></script>
+
+    <style>
+        /* ══════════════════════════════════════════════════════════════
+           DESIGN TOKENS — single source of truth for the whole page
+        ══════════════════════════════════════════════════════════════ */
+        :root {
+            --sys-cyan:         #00f0ff;
+            --sys-cyan-glow:    rgba(0, 240, 255, 0.40);
+            --sys-purple:       #9d4edd;
+            --sys-purple-glow:  rgba(157, 78, 221, 0.30);
+            --sys-red:          #ef4444;
+            --sys-red-glow:     rgba(239, 68, 68, 0.40);
+            --sys-green:        #10b981;
+            --sys-gold:         #fbbf24;
+            --sys-bg-dark:      #02040a;
+            --sys-panel:        rgba(5, 10, 25, 0.88);
+            --sys-border:       rgba(0, 240, 255, 0.22);
+            --transition:       all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--sys-bg-dark);
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .sys-font { font-family: 'Rajdhani', sans-serif; letter-spacing: 0.05em; }
+
+        .sovereign-panel {
+            background: var(--sys-panel);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 240, 255, 0.14);
+            box-shadow: 0 8px 32px rgba(0,0,0,.5), inset 0 0 15px rgba(0,240,255,.04);
+        }
+
+        .penalty-flash { animation: redFlash .5s ease-out; }
+        @keyframes redFlash {
+            0%   { box-shadow:inset 0 0 50px var(--sys-red-glow); border-color:var(--sys-red); }
+            100% { box-shadow:inset 0 0 15px rgba(0,240,255,.04); border-color:rgba(0,240,255,.14); }
+        }
+
+        @keyframes systemPopIn {
+            0%   { opacity:0; transform:scale(.95) translateY(10px); filter:brightness(2); }
+            100% { opacity:1; transform:scale(1) translateY(0);      filter:brightness(1); }
+        }
+        .animate-system-pop { animation: systemPopIn .4s cubic-bezier(.2,.8,.2,1) forwards; }
+
+        ::-webkit-scrollbar { width:4px; }
+        ::-webkit-scrollbar-thumb { background:var(--sys-cyan); border-radius:2px; }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'sys-dark':   '#010206',
+                        'sys-cyan':   'var(--sys-cyan, #00f0ff)',
+                        'sys-purple': '#8b5cf6',
+                        'sys-gold':   '#fbbf24',
+                        'sys-rose':   '#ef4444',
+                        'sys-green':  '#10b981',
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+
+<body class="min-h-screen p-4 md:p-8">
+    <div class="sov-secondary-bg" aria-hidden="true"></div>
+    <div class="system-alert-popup" id="alertPopup"></div>
+    <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col-reverse gap-2 pointer-events-none"></div>
+
+    <div class="max-w-[1440px] mx-auto space-y-5">
+        <header id="main-header" class="sovereign-panel rounded-xl p-5 flex flex-col lg:flex-row justify-between items-center gap-4 border-b-2 border-[var(--sys-cyan)] transition-all duration-300 mt-16">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-[var(--sys-cyan)]/10 border border-[var(--sys-cyan)] flex items-center justify-center text-xl shadow-[0_0_15px_rgba(0,240,255,.2)]">
+                    ⚔️
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black tracking-wide text-white">SOVEREIGN SYSTEM</h1>
+                    <p class="text-xs text-[var(--sys-cyan)] sys-font tracking-widest uppercase">Active Quests Monitor</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-6 bg-slate-950/60 px-6 py-3 rounded-lg border border-slate-800">
+                <div class="text-center">
+                    <span class="block text-[10px] text-slate-500 sys-font">LEVEL</span>
+                    <span id="player-level" class="text-xl font-bold text-white sys-font">1</span>
+                </div>
+                <div class="h-8 w-px bg-slate-800"></div>
+                <div class="min-w-[140px]">
+                    <div class="flex justify-between text-[10px] text-slate-500 sys-font mb-1">
+                        <span>EXP</span>
+                        <span id="xpText" class="text-[var(--sys-cyan)]">0 / 100</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div id="player-xp-bar" class="bg-[var(--sys-cyan)] h-full transition-all duration-500" style="width:0%"></div>
+                    </div>
+                </div>
+            </div> 
+        </header>
+
+        <nav id="sovereign-nav" class="flex flex-wrap gap-3 justify-center md:justify-start items-center p-4 bg-slate-950/60 border border-slate-800/50 backdrop-blur-md rounded-lg my-4 select-none">
+            <a href="index11.html" class="px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                <span>🏠</span> <span>DASHBOARD</span>
+            </a>
+            <a href="operational-charter.html" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                <span>📜</span> <span>CHARTER</span>
+            </a>
+            <a href="active-quests.html" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-[var(--sys-cyan)] bg-[var(--sys-cyan)]/10 text-[var(--sys-cyan)] shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                <span>⚔️</span> <span>ACTIVE QUESTS</span>
+            </a>
+            <a href="brain-stats.html" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                <span>🧠</span> <span>BRAIN STATS</span>
+            </a>
+            <a href="system-logs.html" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                <span>📈</span> <span>ANALYTICS</span>
+            </a>
+        </nav>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div class="lg:col-span-2 space-y-5">
+                <section class="sovereign-panel rounded-xl p-6 min-h-[280px] flex flex-col justify-between relative overflow-hidden animate-system-pop">
+                    <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-[var(--sys-cyan)] to-transparent opacity-50"></div>
+
+                    <div>
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+                            <h2 class="text-sm font-bold text-white flex items-center gap-2 sys-font tracking-widest uppercase">
+                                <span class="animate-pulse inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                                Current Charter Protocol
+                            </h2>
+                            <span id="quest-category" class="px-2 py-0.5 text-[10px] sys-font rounded bg-slate-800 text-[var(--sys-cyan)] border border-slate-700 font-black">
+                                STANDBY
+                            </span>
+                        </div>
+
+                        <!-- No Active Quest State -->
+                        <div id="no-quest-state" class="text-center py-10 space-y-4">
+                            <div class="text-4xl opacity-25 mb-2">🛡️</div>
+                            <p class="text-slate-400 text-sm font-bold tracking-wide" dir="ltr">
+                                No active quest currently running based on the Operational Charter, or current quests have been completed successfully.
+                            </p>
+                        </div>
+
+                        <!-- Active Quest State -->
+                        <div id="active-quest-state" class="hidden space-y-4">
+                            <div dir="ltr">
+                                <h3 id="quest-title" class="text-2xl font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,.2)]">—</h3>
+                                <p id="quest-desc" class="text-sm text-slate-300 mt-2 leading-relaxed font-semibold">—</p>
+                            </div>
+
+                            <div class="p-4 bg-slate-950/80 rounded-lg border border-slate-800/80 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-[10px] text-slate-500 sys-font block mb-1">XP REWARD (IF COMPLETED)</span>
+                                    <span id="quest-xp-reward" class="text-lg font-black text-[var(--sys-cyan)] sys-font">+0 XP</span>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-500 sys-font block mb-1">XP PENALTY (IF FAILED/MISSED)</span>
+                                    <span class="text-lg font-black text-rose-500 sys-font">-10 / -5 XP</span>
+                                </div>
+                            </div>
+
+                            <div id="quest-actions" class="hidden flex gap-3 pt-5 border-t border-slate-800/60 mt-5">
+                                <button onclick="CharterQuestManager.completeQuest()" class="flex-1 py-3 bg-emerald-950/40 border border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-black transition duration-300 font-black text-sm sys-font tracking-widest rounded shadow-[0_0_15px_rgba(16,185,129,.08)] hover:shadow-[0_0_25px_rgba(16,185,129,.3)]">
+                                    ✔️ DONE
+                                </button>
+                                <button onclick="CharterQuestManager.failQuest()" class="py-3 px-8 bg-rose-950/20 border border-rose-500/50 text-rose-400 hover:bg-rose-500 hover:text-white transition duration-300 text-sm font-black sys-font tracking-widest rounded hover:shadow-[0_0_20px_rgba(239,68,68,.4)]">
+                                    ❌ FAILED
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="space-y-5">
+                <div class="sovereign-panel rounded-xl p-5 border-r-4 border-r-[var(--sys-purple)] relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-6xl opacity-5 pointer-events-none">📅</div>
+                    <h3 class="text-xs font-black text-[var(--sys-purple)] border-b border-slate-800 pb-2 sys-font tracking-widest uppercase">
+                        System Day Sync
+                    </h3>
+                    <div class="mt-3 flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-300">Standard Day Index:</span>
+                        <div class="flex items-center gap-2">
+                            <span id="sync-day-index" class="text-lg font-black text-white sys-font">0</span>
+                            <span id="sync-day-name" class="text-[10px] bg-purple-950/50 border border-[var(--sys-purple)] text-[var(--sys-purple)] px-2 py-1 rounded sys-font uppercase tracking-widest">
+                                SUNDAY
+                            </span>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-2 leading-relaxed font-bold" dir="ltr">
+                        Synchronized with data: <span class="text-cyan-400">Operational Charter</span>
+                    </p>
+                </div>
+
+                <div class="sovereign-panel rounded-xl p-5 space-y-3 border-r-4 border-r-rose-500" dir="ltr">
+                    <h3 class="text-xs font-black text-rose-500 border-b border-slate-800 pb-2 sys-font tracking-widest uppercase" dir="ltr">
+                        ⚠️ Strict Engagement Laws
+                    </h3>
+                    <ul class="text-xs text-slate-300 space-y-3 list-disc list-inside font-semibold leading-relaxed">
+                        <li>
+                            <span class="text-white">Quest Completion:</span>
+                            Complex and Scientific Quests (+80 XP), Sports Quests (+60 XP), Light Quests (+40 XP).
+                        </li>
+                        <li>
+                            <span class="text-rose-400">Direct Failure:</span>
+                            Clicking "Failed" results in an immediate deduction of 10 XP.
+                        </li>
+                        <li>
+                            <span class="text-orange-400">Time Exceeded (Missed):</span>
+                            If the quest time ends without completion, it will be hidden and 5 XP deducted automatically.
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sovereign-panel rounded-xl p-5 border-r-4 border-r-[var(--sys-cyan)] h-64 flex flex-col">
+                    <h3 class="text-xs font-black text-[var(--sys-cyan)] border-b border-slate-800 pb-2 sys-font tracking-widest uppercase mb-3">
+                        System Logs
+                    </h3>
+                    <div id="local-logs-container" class="flex-1 overflow-y-auto pr-2 space-y-2"></div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+<script>
+    'use strict';
+
+    /* ════════════════════════════════════════════════════════════════
+       PROGRAM DATA GENERATOR (Imported from operational-charter)
+    ════════════════════════════════════════════════════════════════ */
+    const T = {
+        qiyam: { start: 4.5, end: 5.3, timeStr: "04:30 - 05:18", title: "Shower & Night Prayer", desc: "Early wake up, energize the body with water, and stand before God to build discipline." },
+        fajr: { start: 5.3, end: 5.66, timeStr: "05:18 - 05:40", title: "Mosque & Remembrances", desc: "Performing Fajr prayer in the mosque and reciting morning remembrances completely." },
+        prep: { start: 7.25, end: 7.75, timeStr: "07:15 - 07:45", title: "Preparation for High School", desc: "Having breakfast and preparing oneself for the school day." },
+        schoolM: { start: 7.75, end: 12.25, timeStr: "07:45 - 12:15", title: "Morning Study", desc: "Full attention and extreme focus with teachers and absorbing the lessons." },
+        nap: { start: 12.25, end: 13.25, timeStr: "12:15 - 13:15", title: "Recovery & Nap", desc: "Healthy lunch, and a tactical rest/nap to restore brain activity." },
+        prepA: { start: 13.25, end: 13.41, timeStr: "13:15 - 13:25", title: "Preparation for Return", desc: "Preparing for the evening shift." },
+        schoolA: { start: 13.41, end: 17.0, timeStr: "13:25 - 17:00", title: "Evening Study", desc: "Completing school periods in high school." },
+        english: { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Maghrib + English Language", desc: "First third educational viewing, second listening and immersion, third reading and writing." },
+        nightRev: { start: 20.06, end: 23.25, timeStr: "20:04 - 23:15", title: "Intensive Night Review", desc: "Two full hours for the main subject + 45 minutes for the secondary subject." },
+        sleep: { start: 23.25, end: 28.5, timeStr: "23:15 - 04:30", title: "Deep Sleep", desc: "Sleep remembrances, ablution, and complete rest for body and mind recovery." }
+    };
+
+    function wDay(mTitle, mDesc, aTitle, aDesc, nightOverride) { return [T.qiyam, T.fajr, { start: 5.66, end: 7.25, timeStr: "05:40 - 07:15", title: mTitle, desc: mDesc }, T.prep, T.schoolM, T.nap, T.prepA, T.schoolA, { start: 17.0, end: 18.56, timeStr: "17:00 - 18:34", title: "Asr Prayer + " + aTitle, desc: aDesc }, nightOverride || T.english, T.nightRev, T.sleep]; }
+    function fDay(mTitle, mDesc, d12Title, d12Desc, d13Title, d13Desc, aTitle, aDesc, maghribTitle, maghribDesc, nightTitle, nightDesc) { return [T.qiyam, T.fajr, { start: 5.66, end: 7.25, timeStr: "05:40 - 07:15", title: "Surah Al-Kahf + " + mTitle, desc: mDesc }, { start: 7.25, end: 12.25, timeStr: "07:15 - 12:15", title: "Intensive Home Study", desc: "Solving natural sciences topics (coefficient 6) + summarizing and memorizing literary subjects (History, Islamic Studies)." }, { start: 12.25, end: 13.41, timeStr: "12:15 - 13:25", title: d12Title, desc: d12Desc }, { start: 13.41, end: 17.0, timeStr: "13:25 - 17:00", title: d13Title, desc: d13Desc }, { start: 17.0, end: 18.56, timeStr: "17:00 - 18:34", title: "Asr Prayer + " + aTitle, desc: aDesc }, { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Maghrib + " + maghribTitle, desc: maghribDesc }, { start: 20.06, end: 23.25, timeStr: "20:04 - 23:15", title: nightTitle, desc: nightDesc }, T.sleep]; }
+    function sDay(mTitle, mDesc, physMathOverride, d12Title, d12Desc, d13Title, d13Desc, aTitle, aDesc, nightOverride) { return [T.qiyam, T.fajr, { start: 5.66, end: 7.25, timeStr: "05:40 - 07:15", title: "Quran Repetition + " + mTitle, desc: mDesc }, physMathOverride || { start: 7.25, end: 12.25, timeStr: "07:15 - 12:15", title: "Physics and Math Camp", desc: "Studying physics units (4 hours) + complex mathematical problems and functions (3 hours)." }, { start: 12.25, end: 13.41, timeStr: "12:15 - 13:25", title: d12Title, desc: d12Desc }, { start: 13.41, end: 17.0, timeStr: "13:25 - 17:00", title: d13Title, desc: d13Desc }, { start: 17.0, end: 18.56, timeStr: "17:00 - 18:34", title: "Asr Prayer + " + aTitle, desc: aDesc }, { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Maghrib + English Language", desc: "Comprehensive review of terminology and applying rules as an integrated programming logic." }, nightOverride || T.nightRev, T.sleep]; }
+    function campWDay() { return [T.qiyam, T.fajr, { start: 5.66, end: 7.25, timeStr: "05:40 - 07:15", title: "Deep Memorization & Recall", desc: "Reviewing and memorizing literary subjects (Social Studies + Islamic Studies) with double focus." }, T.prep, { start: 7.75, end: 12.25, timeStr: "07:45 - 12:15", title: "Study or Camp", desc: "Attention in high school or solving previous baccalaureate topics at home (depending on availability)." }, T.nap, T.prepA, { start: 13.41, end: 17.0, timeStr: "13:25 - 17:00", title: "Evening Camp for Scientific Subjects", desc: "Solving complex exercise series and baccalaureate topics (Sciences, Physics, Math)." }, { start: 17.0, end: 18.56, timeStr: "17:00 - 18:34", title: "Asr Prayer + Active Rest", desc: "Light running and restoring physical and mental energy." }, { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Maghrib + Languages", desc: "Solving texts and questions in English and French for the Baccalaureate." }, { start: 20.06, end: 23.25, timeStr: "20:04 - 23:15", title: "Synthesis and Error Correction", desc: "Evaluating the day's mistakes, addressing weaknesses, and comprehensive basic review." }, T.sleep]; }
+
+    const PROGRAM_DATA = {
+        oct: { id: 'oct', days: { 0: wDay("New Memorization + HTML", "New memorization from the Holy Quran + learning web programming (HTML).", "Basketball 🏀", "Playing basketball to release energy."), 1: wDay("Quran Reflection + CSS", "Reflecting on a Hizb of the Holy Quran + learning web programming (CSS).", "Montage Session 💻", "Working on video montage and editing."), 2: wDay("Quran Repetition + JS", "Repetition of the Holy Quran + learning web programming (JavaScript).", "Basketball 🏀", "Practicing and analyzing basketball tactics."), 3: wDay("New Memorization + Web Review", "Comprehensive review of web programming (HTML/CSS/JS).", "Montage Session 💻", "Continuing to edit and create content."), 4: wDay("Quran Reflection + Interfaces", "Application on building integrated front-end interfaces.", "Basketball 🏀", "Fitness training and shooting skills."), 5: fDay("Montage Session", "Video editing and content creation.", "Mastering Excel", "Data analysis with Excel.", "Kitab At-Tawheed + English", "Linguistic stabilization and creed study.", "Running (1 Hour) 🏃", "Raising fitness and endurance.", "Interface Project", "Front-end application.", "Spiritual Balance & Voice", "Meditation exercises and improving tone and vocal strength."), 6: sDay("Front-end Programming", "Front-end training.", null, "Mastering Excel", "Data Analysis", "Kitab At-Tawheed + Languages", "Arabic & English.", "Tactical Analysis 🏀", "Watching and analyzing basketball skills.", null) } },
+        nov: { id: 'nov', days: { 0: wDay("New Memorization + Python", "Fundamentals of Artificial Intelligence (Python).", "Jiu-Jitsu 🥋", "Ground BJJ training."), 1: wDay("Quran Reflection + NumPy", "Matrix analysis using NumPy engine.", "Home Gym 🏋️", "Building physical strength and lifting weights."), 2: wDay("Quran Repetition + Python", "Completing the fundamentals of Artificial Intelligence.", "Jiu-Jitsu 🥋", "Developing submission techniques."), 3: wDay("New Memorization + Python", "Programming and building AI algorithms.", "Home Gym 🏋", "Focusing on overall strength."), 4: wDay("Quran Reflection + Interfaces", "Practical application on interface programming.", "Jiu-Jitsu 🥋", "Tactical Sparring session."), 5: fDay("Montage Session", "Creating and editing visual content.", "Tajweed Rules", "Mastering Tajweed (two periods).", "Majestic Recitations + English", "Meditation and English review.", "Jiu-Jitsu 🥋", "Intensive combat training.", "Interface Project", "Building system interfaces.", "Theoretical BJJ + Cybersecurity", "Tactical visual learning and ethical hacking."), 6: sDay("Matrix Analysis (NumPy)", "Mastering data programming.", null, "Mastering Excel", "List analysis.", "Tajweed and Recitations + Languages", "Adjusting phonetics.", "Home Gym 🏋️", "Explosive strength training.", null) } },
+        dec: { id: 'dec', days: { 0: wDay("Memorization + Cybersecurity", "Ethical Hacking and Cyber Defense.", "Football + Chess ⚽♟️", "Dribbling and superior control + chess tactics."), 1: wDay("Reflection + E-Book 1", "Creating and formatting the e-book (Session 1).", "Gym + E-Book 2", "Physical strength + authoring and drafting the book."), 2: wDay("Repetition + Cybersecurity", "Delving into penetration testing.", "Football + Sudoku ⚽🧠", "Tactical possession + complex Sudoku."), 3: wDay("Memorization + Chess & Documentary", "Playing tactical chess and watching documentaries.", "Home Gym 🏋️", "Building strength and releasing effort."), 4: wDay("Intellectual Development (Nasser Al-Aqeel)", "Technical and cultural reading and analytical viewing.", "Football Combat ⚽", "Lethal shots and receiving under pressure."), 5: fDay("Montage Session", "Professional montage and editing.", "Tajweed Rules", "Applying Tajweed rules.", "Recitations + English", "Meditation and applying rules programmatically.", "Jiu-Jitsu 🥋", "Ground engagement.", "Interface Project", "Developing Front-end.", "Football Tactics + Cybersecurity", "Visual analysis of football + hacking concepts."), 6: sDay("Sudoku and Documentaries", "Activating the subconscious.", null, "Ethical Hacking", "Penetration testing and auditing.", "Recitations + Languages", "Arabic and English language.", "Home Gym 🏋️", "Iron exercises.", null) } },
+        jan: { id: 'jan', days: { 0: wDay("Artificial Intelligence Academy", "Training and developing AI models.", "Swimming 🏊", "Water flips and underwater endurance."), 1: wDay("E-Book (Drafting)", "Advanced formatting of the e-book.", "Gym + E-Book", "Strong exercises and following up on authoring."), 2: wDay("Artificial Intelligence Academy", "Advanced algorithms.", "Swimming 🏊", "Speed sets and breath control.", { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Sleight of Hand 🃏", desc: "Playing cards mechanics and agility exercises." }), 3: wDay("System Architecture", "Reading and designing system structure.", "Gym + Dual N-Back 🧠", "Physical strength + peak working memory."), 4: wDay("Intellectual Development", "Reading and analytical viewings.", "Barbering Techniques 🪒", "Precise haircutting skills and visual focus."), 5: fDay("Montage Session", "Video editing.", "Swimming Analysis + Running", "Visual learning + aerobic running.", "Swimming + English", "Advanced analysis and linguistic review.", "Swimming & Running 🏊🏃", "Endurance and resistance.", "Dual N-Back + Book", "Final touches and assembling assets.", "Full Stretch & Stimulation", "Lengthening muscle flexibility for recovery."), 6: sDay("Ethical Hacking and Analysis", "Vulnerability assessment.", null, "Underwater Swimming", "Psychological and physical endurance.", "Recitations + Languages", "Advanced grammar.", "Home Gym 🏋️", "Raising muscle mass.", null) } },
+        feb: { id: 'feb', days: { 0: wDay("Artificial Intelligence Academy", "Training neural models.", "Swimming 🏊", "Flips and speed training."), 1: wDay("Review (45m Secondary)", "Additional study.", "Muay Thai 🥊", "Punches, kicks, and elbow strikes.", { start: 20.06, end: 23.25, timeStr: "20:04 - 23:15", title: "Review + Muay Thai", desc: "Two hours core subject + shadow boxing rounds." }), 2: wDay("Artificial Intelligence Academy", "Building smart applications.", "Swimming 🏊", "Endurance sets.", { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Muay Thai 🥊", desc: "Advanced offensive combinations." }), 3: wDay("System Architecture", "Analyzing software systems.", "Gym + Muay Thai 🥊", "Explosive strength and combat tactics."), 4: wDay("Intellectual Development", "Free viewings and reading.", "Barbering & Cards 🪒🃏", "Precise haircut and cards mechanics."), 5: fDay("Montage Session", "Editing digital content.", "Muay Thai Matches + Running", "Combat analysis and aerobic running.", "Barbering & Cards", "Developing manual precision.", "Swimming & Running 🏊🏃", "Cardiovascular and pulmonary endurance.", "English Language", "Deepening grammatical rules.", "Stretch & Recovery", "Physical preparation for deep rest."), 6: sDay("Advanced Ethical Hacking", "Securing networks.", null, "Swimming", "Resistance training.", "Muay Thai Matches", "Analyzing combat strategies.", "Home Gym 🏋️", "Isolation training.", { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Advanced Hacking", desc: "Advanced vulnerability testing." }) } },
+        mar: { id: 'mar', days: { 0: campWDay(), 1: campWDay(), 2: campWDay(), 3: campWDay(), 4: campWDay(), 5: campWDay(), 6: campWDay() } },
+        apr: { id: 'apr', days: { 0: campWDay(), 1: campWDay(), 2: campWDay(), 3: campWDay(), 4: campWDay(), 5: campWDay(), 6: campWDay() } },
+        may: { id: 'may', days: { 0: campWDay(), 1: campWDay(), 2: campWDay(), 3: campWDay(), 4: campWDay(), 5: campWDay(), 6: campWDay() } },
+        jun: { id: 'jun', days: { 0: campWDay(), 1: campWDay(), 2: campWDay(), 3: campWDay(), 4: campWDay(), 5: campWDay(), 6: campWDay() } }
+    };
+
+    /* ════════════════════════════════════════════════════════════════
+       HELPER MODULES (Toast, Sound, TimeSync)
+    ════════════════════════════════════════════════════════════════ */
+    const SoundEffects = {
+        playSystemClick() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.1);
+            } catch(e) {}
+        },
+        playSuccess() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, i) => {
+                    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
+                    gain.gain.setValueAtTime(0.08, ctx.currentTime + i * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.3);
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + i * 0.1); osc.stop(ctx.currentTime + i * 0.1 + 0.3);
+                });
+            } catch(e) {}
+        }
+    };
+
+    const Toast = {
+        show(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'border-emerald-500 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,.3)]',
+                error:   'border-rose-500   text-rose-400   shadow-[0_0_15px_rgba(225,29,72,.3)]',
+                info:    'border-[var(--sys-cyan)] text-[var(--sys-cyan)] shadow-[0_0_15px_rgba(0,240,255,.3)]'
+            };
+            toast.className = `pointer-events-auto px-5 py-3 bg-[#02040a]/95 border backdrop-blur-md text-sm font-bold sys-font tracking-wide animate-system-pop ${colors[type] || colors.info}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(8px)'; toast.style.transition = 'all .3s ease'; setTimeout(() => toast.remove(), 300); }, 4200);
+        }
+    };
+
+    const TimeSync = {
+        init() {
+            const now = new Date();
+            const dayIndex = now.getDay();
+            const dayNames = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+            document.getElementById('sync-day-index').textContent = dayIndex;
+            document.getElementById('sync-day-name').textContent = dayNames[dayIndex];
+        }
+    };
+
+    /* ════════════════════════════════════════════════════════════════
+       PLAYER STATE
+    ════════════════════════════════════════════════════════════════ */
+    const PlayerState = {
+        data: { level: 1, xp: 0 },
+        init() {
+            let saved = null;
+            try { saved = localStorage.getItem('monarch_system_data'); } catch(e) {}
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    this.data = { ...this.data, ...parsed };
+                } catch(e) {}
+            } else { this.save(); }
+            this.updateUI();
+        },
+        save() {
+            try {
+                if (window.SovereignCore) SovereignCore.save(this.data);
+                else localStorage.setItem('monarch_system_data', JSON.stringify(this.data));
+            } catch(e) {}
+        },
+        addXP(amount) {
+            this.data.xp = Math.max(0, this.data.xp + amount);
+            let xpNeeded = this.data.level * 100;
+            while (this.data.xp >= xpNeeded) {
+                this.data.xp -= xpNeeded;
+                this.data.level++;
+                xpNeeded = this.data.level * 100;
+                Toast.show(`🚀 Level Up! Level ${this.data.level}`, 'success');
+                SoundEffects.playSuccess();
+            }
+            this.save(); this.updateUI();
+        },
+        addReward(xpAmt) { if (xpAmt) this.addXP(xpAmt); },
+        applyPenalty(xpPenalty) {
+            if (xpPenalty) this.addXP(-xpPenalty);
+            const header = document.getElementById('main-header');
+            if (header) { header.classList.add('penalty-flash'); setTimeout(() => header.classList.remove('penalty-flash'), 500); }
+        },
+        updateUI() {
+            const lvl = this.data.level; const xp = this.data.xp; const xpNeeded = lvl * 100;
+            const xpPct = Math.min((xp / xpNeeded) * 100, 100);
+            document.getElementById('player-level').textContent = lvl;
+            document.getElementById('xpText').textContent = `${xp} / ${xpNeeded}`;
+            if (document.getElementById('player-xp-bar')) document.getElementById('player-xp-bar').style.width = `${xpPct}%`;
+        }
+    };
+
+    /* ════════════════════════════════════════════════════════════════
+       CHARTER QUEST MANAGER
+    ════════════════════════════════════════════════════════════════ */
+    const CharterQuestManager = {
+        currentActiveBlock: null,
+        timerInterval: null,
+
+        init() {
+            this.checkSchedule();
+            // Check every 30 seconds for state updates
+            this.timerInterval = setInterval(() => this.checkSchedule(), 30000);
+            this.renderLogs();
+        },
+
+        getDailyTracking() {
+            const todayStr = new Date().toDateString();
+            let tracking = JSON.parse(localStorage.getItem('sov_daily_quests_track') || '{}');
+            if (tracking.date !== todayStr) {
+                tracking = { date: todayStr, tasks: {} }; // Reset tracker on a new day
+                localStorage.setItem('sov_daily_quests_track', JSON.stringify(tracking));
+            }
+            return tracking;
+        },
+
+        markTask(timeStr, status) {
+            const track = this.getDailyTracking();
+            track.tasks[timeStr] = status;
+            localStorage.setItem('sov_daily_quests_track', JSON.stringify(track));
+        },
+
+        getQuestXP(title, desc) {
+            const text = (title + " " + desc).toLowerCase();
+            const scienceWords = ['study', 'review', 'sciences', 'physics', 'math', 'programming', 'html', 'css', 'js', 'javascript', 'python', 'ai', 'cybersecurity', 'high school', 'camp', 'algorithms', 'data', 'system'];
+            const sportWords = ['basketball', 'jiu-jitsu', 'gym', 'combat', 'swimming', 'muay thai', 'running', 'strength', 'football', 'sports', 'physical', 'iron'];
+
+            if (scienceWords.some(w => text.includes(w))) return 80;
+            if (sportWords.some(w => text.includes(w))) return 60;
+            return 40; // Default (Quran, reading, video editing, games)
+        },
+
+        checkSchedule() {
+            const monthId = localStorage.getItem('sovereign_bac_month') || 'oct';
+            const prog = PROGRAM_DATA[monthId];
+            if (!prog) return;
+
+            const now = new Date();
+            const day = now.getDay();
+            const currentHourDec = now.getHours() + now.getMinutes() / 60;
+            const blocks = prog.days[day] || [];
+            const track = this.getDailyTracking();
+
+            this.currentActiveBlock = null;
+
+            blocks.forEach(block => {
+                // Handle passed/missed tasks dynamically
+                if (block.end <= currentHourDec) {
+                    if (!track.tasks[block.timeStr]) {
+                        this.markTask(block.timeStr, 'missed');
+                        PlayerState.applyPenalty(5); // Missed task penalty
+                        this.logAction('error', `⚠️ Quest time exceeded [${block.title}]: -5 XP`);
+                        Toast.show(`⚠️ Quest time exceeded: -5 XP`, 'error');
+                    }
+                }
+                // Handle current task
+                else if (currentHourDec >= block.start && currentHourDec < block.end) {
+                    if (!track.tasks[block.timeStr]) {
+                        this.currentActiveBlock = block;
+                    }
+                }
+            });
+
+            this.render();
+        },
+
+        render() {
+            const noState = document.getElementById('no-quest-state');
+            const aqState = document.getElementById('active-quest-state');
+            const actions = document.getElementById('quest-actions');
+
+            if (!this.currentActiveBlock) {
+                if (noState) noState.classList.remove('hidden');
+                if (aqState) aqState.classList.add('hidden');
+                if (actions) actions.classList.add('hidden');
+                return;
+            }
+
+            if (noState) noState.classList.add('hidden');
+            if (aqState) aqState.classList.remove('hidden');
+            if (actions) actions.classList.remove('hidden');
+
+            const b = this.currentActiveBlock;
+            document.getElementById('quest-title').textContent = b.title;
+            document.getElementById('quest-desc').textContent = b.desc;
+            document.getElementById('quest-category').textContent = b.timeStr;
+            
+            const xpReward = this.getQuestXP(b.title, b.desc);
+            document.getElementById('quest-xp-reward').textContent = `+${xpReward} XP`;
+        },
+
+        completeQuest() {
+            if (!this.currentActiveBlock) return;
+            const b = this.currentActiveBlock;
+            const xp = this.getQuestXP(b.title, b.desc);
+            
+            this.markTask(b.timeStr, 'done');
+            PlayerState.addReward(xp);
+            SoundEffects.playSystemClick();
+            this.logAction('quest', `✅ Completed [${b.title}]: +${xp} XP`);
+            Toast.show(`✅ Completed successfully: +${xp} XP`, 'success');
+            
+            this.checkSchedule();
+        },
+
+        failQuest() {
+            if (!this.currentActiveBlock) return;
+            const b = this.currentActiveBlock;
+            
+            this.markTask(b.timeStr, 'failed');
+            PlayerState.applyPenalty(10);
+            SoundEffects.playSystemClick();
+            this.logAction('error', `❌ Failed quest [${b.title}]: -10 XP`);
+            Toast.show(`❌ Failed quest: -10 XP`, 'error');
+            
+            this.checkSchedule();
+        },
+
+        logAction(type, detail) {
+            let logs = [];
+            try { logs = JSON.parse(localStorage.getItem('sovereign_system_logs') || '[]'); } catch(e) {}
+            logs.unshift({ id: 'log_' + Date.now(), timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }), type, message: detail });
+            try { localStorage.setItem('sovereign_system_logs', JSON.stringify(logs.slice(0, 100))); } catch(e) {}
+            this.renderLogs();
+        },
+
+        renderLogs() {
+            const container = document.getElementById('local-logs-container');
+            if (!container) return;
+            let logs = [];
+            try { logs = JSON.parse(localStorage.getItem('sovereign_system_logs') || '[]'); } catch(e) {}
+
+            if (logs.length === 0) {
+                container.innerHTML = `<p class="text-slate-600 text-center py-4 sys-font">Log is currently empty.</p>`;
+                return;
+            }
+            const colorMap = { quest:'text-emerald-400', error:'text-rose-400', system:'text-[var(--sys-cyan)]' };
+            container.innerHTML = logs.slice(0, 15).map(log => {
+                const color = colorMap[log.type] || colorMap.system;
+                return `<div class="p-1.5 bg-slate-950/60 border border-slate-900 rounded mb-1 flex items-start gap-2" dir="ltr">
+                            <span class="text-slate-500 flex-shrink-0 mt-0.5 text-[10px]" dir="ltr">[${log.timestamp}]</span>
+                            <span class="${color} font-bold leading-tight text-[11px]">${log.message}</span>
+                        </div>`;
+            }).join('');
+        }
+    };
+
+    /* ════════════════════════════════════════════════════════════════
+       INITIALIZATION
+    ════════════════════════════════════════════════════════════════ */
+    window.addEventListener('DOMContentLoaded', () => {
+        TimeSync.init();
+        PlayerState.init();
+        CharterQuestManager.init();
+
+        if (window.SovereignCore) {
+            SovereignCore.onChange(() => {
+                PlayerState.init();
+                CharterQuestManager.checkSchedule();
+            });
+        }
+    });
+</script>
+</body>
+</html>

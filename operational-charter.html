@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSTEM INITIALIZATION | BACCALAUREATE 2027 PROTOCOL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index11.css">
+    <script src="monarch-core.js"></script>
+    <style>
+        :root {
+            --sys-cyan: #00f0ff;
+            --sys-cyan-glow: rgba(0, 240, 255, 0.6);
+            --sys-purple: #9d4edd;
+            --sys-purple-glow: rgba(157, 78, 221, 0.4);
+            --sys-bg-dark: #02040a;
+            --sys-panel: rgba(5, 10, 25, 0.85);
+            --sys-border: rgba(0, 240, 255, 0.3);
+        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--sys-bg-dark);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .sys-font { font-family: 'Rajdhani', sans-serif; letter-spacing: 0.05em; }
+        .sl-panel {
+            background: var(--sys-panel);
+            backdrop-filter: blur(16px);
+            border: 2px solid var(--sys-border);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.1);
+            position: relative;
+        }
+        .sl-panel::before, .sl-panel::after {
+            content: ''; position: absolute; width: 20px; height: 20px; pointer-events: none;
+        }
+        .sl-panel::before { top: -2px; left: -2px; border-top: 3px solid var(--sys-cyan); border-left: 3px solid var(--sys-cyan); }
+        .sl-panel::after { bottom: -2px; right: -2px; border-bottom: 3px solid var(--sys-cyan); border-right: 3px solid var(--sys-cyan); }
+        
+        .block-active {
+            border: 1px solid var(--sys-cyan);
+            background: rgba(0, 240, 255, 0.05);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+        }
+        .live-pulse {
+            animation: livePulse 2s infinite;
+        }
+        @keyframes livePulse {
+            0%, 100% { box-shadow: 0 0 5px var(--sys-cyan); }
+            50% { box-shadow: 0 0 20px var(--sys-cyan); }
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--sys-cyan); }
+        .animate-system-pop { animation: systemPopIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        @keyframes systemPopIn {
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); filter: brightness(2); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+        /* Sovereign Video Background Container */
+        .sovereign-video-bg-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+            overflow: hidden; background-color: #000000;
+        }
+        .sovereign-video-element {
+            position: absolute; top: 50%; left: 50%;
+            min-width: 100%; min-height: 100%; width: auto; height: auto;
+            transform: translate(-50%, -50%); object-fit: cover;
+            filter: blur(0.1px) brightness(1); opacity: 1; transition: opacity 1s ease-in-out;
+        }
+        .sovereign-video-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.85) 100%);
+            pointer-events: none;
+        }
+        @keyframes border-shimmer { 0%,100%{opacity:0.3;transform:rotate(0deg)} 50%{opacity:1;transform:rotate(180deg)} }
+    </style>
+</head>
+<body class="p-2 md:p-6" dir="ltr">
+    
+<div class="sovereign-video-bg-container">
+    <video autoplay loop muted playsinline class="sovereign-video-element">
+        <source src="neon-citys-charms.1920x1080.mp4" type="video/mp4">
+    </video>
+    <div class="sovereign-video-overlay"></div>
+</div>
+
+<div class="max-w-[1400px] mx-auto space-y-6 relative z-10" dir="ltr">
+
+    <!-- HEADER -->
+    <header class="sl-panel p-4 md:p-6 flex flex-col lg:flex-row justify-between items-center gap-4 animate-system-pop" style="border-color: rgba(157, 78, 221, 0.6);">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-[var(--sys-cyan)]/10 border border-[var(--sys-cyan)] flex items-center justify-center text-xl shadow-[0_0_15px_rgba(0,240,255,0.2)]">🎓</div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-black tracking-wide text-white uppercase">BACCALAUREATE 2027 | ASCENDING ALONE RPG</h1>
+                <p class="text-xs text-[var(--sys-cyan)] sys-font tracking-widest uppercase">System Operations Charter</p>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 bg-slate-950/60 px-6 py-3 rounded-lg border border-slate-800">
+            <div class="text-center">
+                <span class="block text-[10px] text-slate-500 sys-font">LEVEL</span>
+                <span id="player-level" class="text-xl font-bold text-white sys-font">1</span>
+            </div>
+            <div class="h-8 w-[1px] bg-slate-800"></div>
+            <div class="text-left min-w-[120px]">
+                <span class="block text-[10px] text-slate-500 sys-font">EXP PROGRESS</span>
+                <div class="w-full bg-slate-800 h-2 rounded-full mt-1 overflow-hidden">
+                    <div id="player-xp-bar" class="bg-[var(--sys-cyan)] h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav class="flex flex-wrap justify-center gap-2 md:gap-4 text-sm font-bold">
+        <div class="sl-panel p-4 animate-system-pop w-full flex justify-center" style="animation-delay: 0.1s;">
+<nav id="sovereign-nav" class="flex flex-wrap gap-3 justify-center md:justify-start items-center p-4 bg-slate-950/60 border border-slate-800/50 backdrop-blur-md rounded-lg my-4 select-none">
+    <a href="index11.html" target="_self" class="px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>🏠</span> <span>DASHBOARD</span>
+    </a>
+    <a href="operational-charter.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>📜</span> <span>CHARTER</span>
+    </a>
+    <a href="active-quests.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>⚔️</span> <span>ACTIVE QUESTS</span>
+    </a>
+    <a href="brain-stats.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>🧠</span> <span>BRAIN STATS</span>
+    </a>
+    <a href="system-logs.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>📈</span> <span>ANALYTICS</span>
+    </a>
+</nav>
+        </div>
+    </nav>
+
+    <!-- PROTOCOL SELECTOR -->
+    <div class="sl-panel p-5 animate-system-pop" style="animation-delay: 0.2s; background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98)); border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 16px; position: relative; overflow: hidden;">
+        <div style="position: absolute; inset: -1px; border-radius: 16px; padding: 1px; background: linear-gradient(135deg, transparent 30%, rgba(6, 182, 212, 0.6) 45%, rgba(168, 85, 247, 0.6) 55%, transparent 70%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; animation: border-shimmer 4s ease-in-out infinite; pointer-events: none; z-index: 0; filter: blur(0.5px);"></div>
+        
+        <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3" style="border-color: rgba(6, 182, 212, 0.3); position: relative; z-index: 10;">
+            <h2 class="text-sm font-black text-white sys-font tracking-widest uppercase" style="text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);">Monthly Directives Matrix (October - June)</h2>
+            <span class="text-[10px] text-[var(--sys-cyan)] sys-font uppercase bg-[var(--sys-cyan)]/10 px-3 py-1 rounded border border-[var(--sys-cyan)]/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]">BAC 2027 CAMPAIGN</span>
+        </div>
+
+        <!-- Dynamically generated month buttons -->
+        <div id="months-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3" style="position: relative; z-index: 10;"></div>
+    </div>
+
+    <!-- TODAY'S PROTOCOL -->
+    <div class="sl-panel p-5 animate-system-pop" style="animation-delay: 0.3s; border-color: rgba(16, 185, 129, 0.4);" dir="ltr">
+        <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3" dir="ltr">
+            <h2 class="text-sm font-black text-emerald-400 sys-font tracking-widest flex items-center gap-2 uppercase">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Today's Active Protocol
+            </h2>
+            <span id="current-day-label" class="text-[10px] text-slate-500 sys-font bg-slate-900 px-2 py-1 rounded border border-slate-800 uppercase"></span>
+        </div>
+        <!-- Precise daily tasks will be generated here -->
+        <div id="today-schedule-container" class="space-y-2 max-h-[500px] overflow-y-auto pr-2"></div>
+    </div>
+
+    <!-- FULL WEEK PRECISE OVERVIEW -->
+    <div class="sl-panel p-5 animate-system-pop" style="animation-delay: 0.4s;" dir="ltr">
+        <h2 class="text-sm font-black text-white sys-font tracking-widest mb-4 border-b border-slate-800 pb-3 uppercase" dir="ltr">📅 Precise Weekly Schedule Mapping</h2>
+        <div id="full-week-container" class="space-y-6"></div>
+    </div>
+
+</div>
+
+<script>
+// ==========================================
+// PROGRAM DATA GENERATOR (OCT - JUN)
+// ==========================================
+
+const T = {
+    qiyam: { start: 4.5, end: 5.3, timeStr: "04:30 - 05:18", title: "Shower & Night Prayer (Qiyam)", desc: "Early awakening, body activation with water, and standing before Allah to build discipline." },
+    fajr: { start: 5.3, end: 5.66, timeStr: "05:18 - 05:40", title: "Mosque & Morning Adhkar", desc: "Performing Fajr prayer in the mosque and reciting complete morning Adhkar." },
+    prep: { start: 7.25, end: 7.75, timeStr: "07:15 - 07:45", title: "High School Preparation", desc: "Having breakfast and preparing mentally for school hours." },
+    schoolM: { start: 7.75, end: 12.25, timeStr: "07:45 - 12:15", title: "Morning Study Sessions", desc: "Absolute attention, high focus with teachers, and deep comprehension of lessons." },
+    nap: { start: 12.25, end: 13.25, timeStr: "12:15 - 13:15", title: "Recovery & Nap", desc: "Healthy lunch and tactical rest/nap to restore brain energy." },
+    prepA: { start: 13.25, end: 13.41, timeStr: "13:15 - 13:25", title: "Afternoon Prep", desc: "Preparing for the afternoon school session." },
+    schoolA: { start: 13.41, end: 17.0, timeStr: "13:25 - 17:00", title: "Afternoon Study Sessions", desc: "Completing school classes at the high school." },
+    english: { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Maghrib + English Language", desc: "First third: educational viewing; second third: listening & immersion; third third: reading & writing." },
+    nightRev: { start: 20.06, end: 23.25, timeStr: "20:04 - 23:15", title: "Intensive Night Review", desc: "Two full hours for core subject + 45 minutes for secondary subject." },
+    sleep: { start: 23.25, end: 28.5, timeStr: "23:15 - 04:30", title: "Deep Slumber", desc: "Sleep Adhkar, ritual ablution (Wudu), and complete rest for body and mind recovery." }
+};
+
+function wDay(mTitle, mDesc, aTitle, aDesc, nightOverride) {
+    return [
+        T.qiyam, T.fajr,
+        { start: 5.66, end: 7.25, timeStr: "05:40 - 07:15", title: mTitle, desc: mDesc },
+        T.prep, T.schoolM, T.nap, T.prepA, T.schoolA,
+        { start: 17.0, end: 18.56, timeStr: "17:00 - 18:34", title: "Asr Prayer + " + aTitle, desc: aDesc },
+        nightOverride || T.english,
+        T.nightRev, T.sleep
+    ];
+}
+
+function fDay(mTitle, mDesc, d12Title, d12Desc, d13Title, d13Desc, aTitle, aDesc, maghribTitle, maghribDesc, nightTitle, nightDesc) {
+    return [
+        T.qiyam, T.fajr,
+        { start: 5.66, end: 7.25, timeStr: "05:40 - 07:15", title: "Surah Al-Kahf + " + mTitle, desc: mDesc },
+        { start: 7.25, end: 12.25, timeStr: "07:15 - 12:15", title: "Intensive Home Study", desc: "Solving Natural Sciences exercises (Coefficient 6) + summarizing & memorizing literary subjects (History, Islamic Studies)." },
+        { start: 12.25, end: 13.41, timeStr: "12:15 - 13:25", title: d12Title, desc: d12Desc },
+        { start: 13.41, end: 17.0, timeStr: "13:25 - 17:00", title: d13Title, desc: d13Desc },
+        { start: 17.0, end: 18.56, timeStr: "17:00 - 18:34", title: "Asr Prayer + " + aTitle, desc: aDesc },
+        { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Maghrib + " + maghribTitle, desc: maghribDesc },
+        { start: 20.06, end: 23.25, timeStr: "20:04 - 23:15", title: nightTitle, desc: nightDesc },
+        T.sleep
+    ];
+}
+
+function sDay(mTitle, mDesc, physMathOverride, d12Title, d12Desc, d13Title, d13Desc, aTitle, aDesc, nightOverride) {
+    return [
+        T.qiyam, T.fajr,
+        { start: 5.66, end: 7.25, timeStr: "05:40 - 07:15", title: "Quran Repetition + " + mTitle, desc: mDesc },
+        physMathOverride || { start: 7.25, end: 12.25, timeStr: "07:15 - 12:15", title: "Physics & Math Bootcamp", desc: "Studying Physics units (4 hours) + complex calculus and math functions (3 hours)." },
+        { start: 12.25, end: 13.41, timeStr: "12:15 - 13:25", title: d12Title, desc: d12Desc },
+        { start: 13.41, end: 17.0, timeStr: "13:25 - 17:00", title: d13Title, desc: d13Desc },
+        { start: 17.0, end: 18.56, timeStr: "17:00 - 18:34", title: "Asr Prayer + " + aTitle, desc: aDesc },
+        { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Maghrib + English Language", desc: "Comprehensive review of terminologies and applying grammar rules as an integrated programming logic." },
+        nightOverride || T.nightRev,
+        T.sleep
+    ];
+}
+
+function campWDay() {
+    return [
+        T.qiyam, T.fajr,
+        { start: 5.66, end: 7.25, timeStr: "05:40 - 07:15", title: "Deep Memorization & Recall", desc: "Reviewing and memorizing literary subjects (Social Studies + Islamic Studies) with double focus." },
+        T.prep,
+        { start: 7.75, end: 12.25, timeStr: "07:45 - 12:15", title: "School or Bootcamp Study", desc: "Attending high school or solving past Baccalaureate exams at home (depending on availability)." },
+        T.nap, T.prepA,
+        { start: 13.41, end: 17.0, timeStr: "13:25 - 17:00", title: "Afternoon Science Bootcamp", desc: "Solving complex exercise series and Baccalaureate exams (Sciences, Physics, Mathematics)." },
+        { start: 17.0, end: 18.56, timeStr: "17:00 - 18:34", title: "Asr Prayer + Active Rest", desc: "Light jogging and physical/mental energy recovery." },
+        { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Maghrib + Languages", desc: "Solving English and French texts and Baccalaureate questions." },
+        { start: 20.06, end: 23.25, timeStr: "20:04 - 23:15", title: "Synthesis & Error Correction", desc: "Evaluating daily errors, addressing weaknesses, and conducting essential comprehensive reviews." },
+        T.sleep
+    ];
+}
+
+const PROGRAM_DATA = {
+    oct: {
+        id: 'oct', days: {
+            0: wDay("New Memorization + HTML", "Memorizing new Quran verses + learning Web Development (HTML).", "Basketball 🏀", "Playing basketball to release energy."),
+            1: wDay("Quran Contemplation + CSS", "Contemplating a Hizb of the Holy Quran + learning Web Development (CSS).", "Editing Session 💻", "Working on video editing and production."),
+            2: wDay("Quran Repetition + JS", "Quran repetition + learning Web Development (JavaScript).", "Basketball 🏀", "Practicing and analyzing basketball tactics."),
+            3: wDay("New Memorization + Web Review", "Comprehensive review of Web Development (HTML/CSS/JS).", "Editing Session 💻", "Continuing editing and content creation."),
+            4: wDay("Quran Contemplation + UI", "Applying full front-end interface building.", "Basketball 🏀", "Fitness training and shooting skills."),
+            5: fDay("Video Editing Session", "Video editing and content creation.", "Excel Mastery", "Data analysis using Excel.", "Tawhid Book + English", "Linguistic reinforcement and creed study.", "Running (1 hr) 🏃", "Building stamina and endurance.", "UI Project", "Front-end application.", "Spiritual Balance & Voice", "Meditation exercises and voice tone/power enhancement."),
+            6: sDay("Front-End Programming", "Front-end training.", null, "Excel Mastery", "Data analysis", "Tawhid Book + Languages", "Arabic and English.", "Tactical Analysis 🏀", "Watching and analyzing basketball skills.", null)
+        }
+    },
+    nov: {
+        id: 'nov', days: {
+            0: wDay("New Memorization + Python", "Artificial Intelligence basics (Python).", "Brazilian Jiu-Jitsu 🥋", "Ground BJJ training."),
+            1: wDay("Quran Contemplation + NumPy", "Matrix analysis using NumPy engine.", "Home Gym 🏋️", "Building physical strength and lifting weights."),
+            2: wDay("Quran Repetition + Python", "Completing AI fundamentals.", "Brazilian Jiu-Jitsu 🥋", "Developing submission techniques."),
+            3: wDay("New Memorization + Python", "Programming and building AI algorithms.", "Home Gym 🏋", "Focusing on overall strength."),
+            4: wDay("Quran Contemplation + UI", "Practical application of interface programming.", "Brazilian Jiu-Jitsu 🥋", "Tactical sparring session."),
+            5: fDay("Video Editing Session", "Visual content production and editing.", "Tajweed Rules", "Mastering Tajweed (two sessions).", "Majestic Recitations + English", "Contemplation and English review.", "Brazilian Jiu-Jitsu 🥋", "Intensive combat training.", "UI Project", "Building system interfaces.", "BJJ Theory + Cybersecurity", "Tactical visual learning and ethical hacking."),
+            6: sDay("Matrix Analysis (NumPy)", "Mastering data programming.", null, "Excel Mastery", "List analysis.", "Tajweed & Recitations + Languages", "Audio calibration.", "Home Gym 🏋️", "Explosive strength training.", null)
+        }
+    },
+dec: {
+        id: 'dec', days: {
+            0: wDay("Memorization + Cybersecurity", "Ethical hacking and cyber defense.", "Football + Chess ⚽♟️", "Superior dribbling/control + chess tactics."),
+            1: wDay("Contemplation + Digital Book 1", "Creating and formatting the digital book (Session 1).", "Gym + Digital Book 2", "Physical strength + digital book authoring and phrasing."),
+            2: wDay("Repetition + Cybersecurity", "Deep diving into penetration testing.", "Football + Sudoku ⚽🧠", "Tactical possession + complex sudoku."),
+            3: wDay("Memorization + Chess & Documentary", "Playing tactical chess and watching documentaries.", "Home Gym 🏋️", "Building strength and relieving effort."),
+            4: wDay("Intellectual Development (Nasser Al-Ageel)", "Technical and analytical reading and viewing.", "Football Combat ⚽", "Deadly shots and receiving under pressure."),
+            5: fDay("Video Editing Session", "Professional video editing and post-production.", "Tajweed Rules", "Applying Tajweed rules.", "Recitations + English", "Contemplation and applying grammar programmatically.", "Brazilian Jiu-Jitsu 🥋", "Ground engagement.", "UI Project", "Front-end development.", "Football Tactics + Cybersecurity", "Visual football analysis + hacking concepts."),
+            6: sDay("Sudoku & Documentaries", "Stimulating the subconscious mind.", null, "Ethical Hacking", "Penetration testing and auditing.", "Recitations + Languages", "Arabic and English language.", "Home Gym 🏋️️", "Iron workouts.", null)
+        }
+    },
+    jan: {
+        id: 'jan', days: {
+            0: wDay("AI Academy", "Training and developing AI models.", "Swimming 🏊", "Water flips and underwater endurance."),
+            1: wDay("Digital Book (Drafting)", "Advanced digital book formatting.", "Gym + Digital Book", "Heavy workouts and authoring follow-up."),
+            2: wDay("AI Academy", "Advanced algorithms.", "Swimming 🏊", "Speed sets and breath control.", { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Sleight of Hand 🃏", desc: "Card mechanics and dexterity drills." }),
+            3: wDay("System Architecture", "Reading and designing system architecture.", "Gym + Dual N-Back 🧠", "Physical strength + working memory peak."),
+            4: wDay("Intellectual Development", "Reading and analytical viewings.", "Barbering Techniques 🪒", "Precise hair-cutting skills and visual focus."),
+            5: fDay("Video Editing Session", "Video editing.", "Swimming Analysis + Running", "Visual learning and aerobic running.", "Swimming + English", "Advanced analysis and linguistic review.", "Swimming & Running 🏊🏃", "Endurance and resistance.", "Dual N-Back + Book", "Final touches and asset gathering.", "Full Stretch & Stimulation", "Muscle flexibility stretching for deep recovery."),
+            6: sDay("Ethical Hacking & Analysis", "Vulnerability assessment.", null, "Underwater Swimming", "Mental and physical endurance.", "Recitations + Languages", "Advanced grammar.", "Home Gym 🏋", "Muscle hypertrophy mass building.", null)
+        }
+    },
+    feb: {
+        id: 'feb', days: {
+            0: wDay("AI Academy", "Training neural models.", "Swimming 🏊", "Flips and speed training."),
+            1: wDay("Review (45m High School)", "Supplemental study.", "Muay Thai 🥊", "Punches, kicks, and elbow strikes.", { start: 20.06, end: 23.25, timeStr: "20:04 - 23:15", title: "Review + Muay Thai", desc: "Two hours core subject + shadow boxing rounds." }),
+            2: wDay("AI Academy", "Building smart applications.", "Swimming 🏊", "Endurance sets.", { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Muay Thai 🥊", desc: "Advanced offensive combinations." }),
+            3: wDay("System Architecture", "Software systems analysis.", "Gym + Muay Thai 🥊", "Explosive power and combat tactics."),
+            4: wDay("Intellectual Development", "Free viewing and reading.", "Barbering & Cards 🪒🃏", "Precision haircuts and card mechanics."),
+            5: fDay("Video Editing Session", "Digital content editing.", "Muay Thai Matches + Running", "Combat analysis and aerobic running.", "English Language", "Deepening grammar rules.", "Swimming & Running 🏊🏃", "Cardiorespiratory endurance.", "English Language", "Deepening grammar rules.", "Stretching & Recovery", "Physical preparation for deep rest."),
+            6: sDay("Advanced Ethical Hacking", "Network security.", null, "Swimming", "Resistance training.", "Muay Thai Matches", "Combat strategy analysis.", "Home Gym 🏋️", "Isolation training.", { start: 18.56, end: 20.06, timeStr: "18:34 - 20:04", title: "Advanced Hacking", desc: "Advanced vulnerability testing." })
+        }
+    },
+    mar: { id: 'mar', days: { 0: campWDay(), 1: campWDay(), 2: campWDay(), 3: campWDay(), 4: campWDay(), 5: campWDay(), 6: campWDay() } },
+    apr: { id: 'apr', days: { 0: campWDay(), 1: campWDay(), 2: campWDay(), 3: campWDay(), 4: campWDay(), 5: campWDay(), 6: campWDay() } },
+    may: { id: 'may', days: { 0: campWDay(), 1: campWDay(), 2: campWDay(), 3: campWDay(), 4: campWDay(), 5: campWDay(), 6: campWDay() } },
+    jun: { id: 'jun', days: { 0: campWDay(), 1: campWDay(), 2: campWDay(), 3: campWDay(), 4: campWDay(), 5: campWDay(), 6: campWDay() } }
+};
+
+const Utils = {
+    getDayName(idx) {
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return days[idx];
+    }
+};
+
+const PlayerSync = {
+    data: { level: 1, xp: 0 },
+    init() {
+        this.load();
+        this.updateUI();
+        if (window.SovereignCore) {
+            SovereignCore.onChange(() => {
+                this.load();
+                this.updateUI();
+            });
+        }
+    },
+    load() {
+        try {
+            const saved = window.SovereignCore ? SovereignCore.data : JSON.parse(localStorage.getItem('monarch_system_data') || '{}');
+            this.data.level = saved.level || 1;
+            this.data.xp = saved.xp || 0;
+        } catch(e) {}
+    },
+    updateUI() {
+        const lvlEl = document.getElementById('player-level');
+        const barEl = document.getElementById('player-xp-bar');
+        if(lvlEl) lvlEl.textContent = this.data.level;
+        if(barEl) {
+            const needed = this.data.level * 100;
+            const pct = Math.min((this.data.xp / needed) * 100, 100);
+            barEl.style.width = `${pct}%`;
+        }
+    }
+};
+
+const Charter = {
+    activeProgramId: 'oct',
+
+    init() {
+        PlayerSync.init();
+        this.generateButtons();
+        
+        const saved = localStorage.getItem('sovereign_bac_month');
+        const validIds = Object.keys(PROGRAM_DATA);
+        this.activeProgramId = (saved && validIds.includes(saved)) ? saved : 'oct';
+        
+        this.switch(this.activeProgramId);
+    },
+
+    generateButtons() {
+        const monthConfigs = [
+            { id: 'oct', color: 'cyan', title: '🍂 OCTOBER', sub: 'Routine Establishment & BAC Rules', badge: 'PHASE 1', darkHex: '6, 182, 212', mainHex: '#22d3ee' },
+            { id: 'nov', color: 'cyan', title: '🌧️ NOVEMBER', sub: 'Artificial Intelligence & Total Power', badge: 'PHASE 1', darkHex: '6, 182, 212', mainHex: '#22d3ee' },
+            { id: 'dec', color: 'cyan', title: '❄️️ DECEMBER', sub: 'Cybersecurity & Review', badge: 'PHASE 1', darkHex: '6, 182, 212', mainHex: '#22d3ee' },
+            { id: 'jan', color: 'purple', title: '🎯 JANUARY', sub: 'Cognitive Memory Peak', badge: 'PHASE 2', darkHex: '168, 85, 247', mainHex: '#c084fc' },
+            { id: 'feb', color: 'purple', title: '🥊 FEBRUARY', sub: 'Combat & Mental Tactics', badge: 'PHASE 2', darkHex: '168, 85, 247', mainHex: '#c084fc' },
+            { id: 'mar', color: 'purple', title: '🌱 MARCH CAMP', sub: 'Intensive Review Bootcamp Initiation', badge: 'PHASE 2', darkHex: '168, 85, 247', mainHex: '#c084fc' },
+            { id: 'apr', color: 'emerald', title: '💧 APRIL CAMP', sub: 'Deep Application Bootcamp', badge: 'PHASE 3', darkHex: '16, 185, 129', mainHex: '#34d399' },
+            { id: 'may', color: 'emerald', title: '🔥 MAY CAMP', sub: 'Isolation & Total Disconnection Bootcamp', badge: 'PHASE 3', darkHex: '16, 185, 129', mainHex: '#34d399' },
+            { id: 'jun', color: 'rose', title: '⚔️ JUNE FINAL', sub: 'Warrior Rest & Final Touches', badge: 'BAC 2027', darkHex: '225, 29, 72', mainHex: '#fb7185' }
+        ];
+
+        let html = '';
+        monthConfigs.forEach(m => {
+            html += `
+            <button onclick="Charter.switch('${m.id}')" id="btn-${m.id}" class="sov-month-btn w-full text-left p-4 rounded flex justify-between items-center group" data-color="${m.color}" style="
+                position: relative; background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+                border: 1px solid rgba(${m.darkHex}, 0.15); border-radius: 12px; transition: all 0.4s ease; overflow: hidden; box-shadow: 0 4px 20px rgba(${m.darkHex}, 0.05);
+            " onmouseover="if(!this.dataset.active){this.style.transform='translateY(-3px) scale(1.01)'; this.style.borderColor='rgba(${m.darkHex}, 0.6)'; this.style.boxShadow='0 10px 40px rgba(${m.darkHex}, 0.25), 0 0 30px rgba(${m.darkHex}, 0.15), inset 0 1px 0 rgba(${m.darkHex}, 0.2)';}" onmouseout="if(!this.dataset.active){this.style.transform=''; this.style.borderColor='rgba(${m.darkHex}, 0.15)'; this.style.boxShadow='0 4px 20px rgba(${m.darkHex}, 0.05)';}">
+                <div class="orb" style="position: absolute; top: 50%; left: 50%; width: 200px; height: 200px; background: radial-gradient(circle, rgba(${m.darkHex}, 0.15) 0%, transparent 70%); transform: translate(-50%, -50%); pointer-events: none; z-index: 0; opacity: 0; transition: opacity 0.4s ease;"></div>
+                <div style="position: relative; z-index: 3;" dir="ltr">
+                    <span class="btn-title sys-font text-sm font-black text-white block uppercase" style="transition: all 0.3s ease; text-shadow: 0 0 5px rgba(${m.darkHex}, 0.2);">${m.title}</span>
+                    <span class="btn-sub text-[10px] text-slate-400 block mt-1" style="transition: all 0.3s ease;">${m.sub}</span>
+                </div>
+                <span class="btn-badge sys-font text-[10px] px-2 py-0.5 border" style="position: relative; transition: all 0.3s ease; border-color: rgba(${m.darkHex}, 0.5); color: ${m.mainHex}; text-shadow: 0 0 8px rgba(${m.darkHex}, 0.6);">${m.badge}</span>
+            </button>`;
+        });
+        document.getElementById('months-grid').innerHTML = html;
+    },
+
+    switch(id) {
+        this.activeProgramId = id;
+        localStorage.setItem('sovereign_bac_month', id);
+        
+        const monthConfigs = {
+            'oct': { main: '34, 211, 238', dark: '6, 182, 212', hex: '#22d3ee' },
+            'nov': { main: '34, 211, 238', dark: '6, 182, 212', hex: '#22d3ee' },
+            'dec': { main: '34, 211, 238', dark: '6, 182, 212', hex: '#22d3ee' },
+            'jan': { main: '192, 132, 252', dark: '168, 85, 247', hex: '#c084fc' },
+            'feb': { main: '192, 132, 252', dark: '168, 85, 247', hex: '#c084fc' },
+            'mar': { main: '192, 132, 252', dark: '168, 85, 247', hex: '#c084fc' },
+            'apr': { main: '52, 211, 153', dark: '16, 185, 129', hex: '#34d399' },
+            'may': { main: '52, 211, 153', dark: '16, 185, 129', hex: '#34d399' },
+            'jun': { main: '251, 113, 133', dark: '225, 29, 72', hex: '#fb7185' }
+        };
+
+        Object.keys(monthConfigs).forEach(btnId => {
+            const btn = document.getElementById(`btn-${btnId}`);
+            if(!btn) return;
+            const c = monthConfigs[btnId];
+            
+            if (btnId === id) {
+                btn.dataset.active = '1';
+                btn.style.borderColor = `rgba(${c.main}, 0.9)`;
+                btn.style.boxShadow = `0 0 20px rgba(${c.main}, 0.4), inset 0 0 20px rgba(${c.main}, 0.15)`;
+                btn.style.background = `linear-gradient(145deg, rgba(${c.dark}, 0.15), rgba(15, 23, 42, 0.95))`;
+                btn.querySelector('.orb').style.opacity = '0.6';
+                btn.querySelector('.btn-title').style.color = c.hex;
+                btn.querySelector('.btn-title').style.textShadow = `0 0 15px rgba(${c.main}, 1)`;
+                btn.querySelector('.btn-sub').style.color = c.hex;
+                btn.querySelector('.btn-badge').style.background = `rgba(${c.dark}, 0.2)`;
+            } else {
+                delete btn.dataset.active;
+                btn.style.borderColor = `rgba(${c.dark}, 0.15)`;
+                btn.style.boxShadow = `0 4px 20px rgba(${c.dark}, 0.05)`;
+                btn.style.background = 'linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))';
+                btn.querySelector('.orb').style.opacity = '0';
+                btn.querySelector('.btn-title').style.color = '';
+                btn.querySelector('.btn-title').style.textShadow = `0 0 5px rgba(${c.dark}, 0.2)`;
+                btn.querySelector('.btn-sub').style.color = '';
+                btn.querySelector('.btn-badge').style.background = 'transparent';
+            }
+        });
+
+        this.renderToday();
+        this.renderFullWeek();
+    },
+
+    renderToday() {
+        const container = document.getElementById('today-schedule-container');
+        const dayLabel = document.getElementById('current-day-label');
+        const prog = PROGRAM_DATA[this.activeProgramId];
+        if (!prog || !container) return;
+
+        const now = new Date();
+        const day = now.getDay();
+        const currentHourDec = now.getHours() + now.getMinutes() / 60;
+
+        if (dayLabel) dayLabel.textContent = Utils.getDayName(day);
+
+        const blocks = prog.days[day] || [];
+        let html = '';
+        let activeFound = false;
+
+        blocks.forEach(block => {
+            let isActive = false;
+            if (block.start > block.end) {
+                isActive = !activeFound && (currentHourDec >= block.start || currentHourDec < block.end);
+            } else {
+                isActive = !activeFound && currentHourDec >= block.start && currentHourDec < block.end;
+            }
+            if (isActive) activeFound = true;
+            
+            const activeClass = isActive ? 'block-active live-pulse' : 'bg-slate-950/40 border-slate-800';
+            const titleColor = isActive ? 'text-[var(--sys-cyan)]' : 'text-slate-300';
+            const icon = isActive ? '<span class="text-[var(--sys-cyan)] animate-pulse">●</span>' : '<span class="text-slate-700">○</span>';
+            
+            html += `
+            <div class="p-3 rounded border ${activeClass} mb-2 transition-all" dir="ltr">
+                <div class="flex justify-between items-start mb-1">
+                    <div class="flex items-center gap-2">${icon}<span class="font-bold text-sm ${titleColor}">${block.title}</span></div>
+                    <span class="sys-font text-[10px] text-slate-500 bg-black/40 px-1.5 py-0.5 rounded ml-2" dir="ltr">${block.timeStr}</span>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed pl-5">${block.desc}</p>
+                ${isActive ? '<div class="mt-2 flex items-center gap-2 pl-5"><span class="text-[9px] sys-font text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-500/30">Active Block</span></div>' : ''}
+            </div>`;
+        });
+        
+        container.innerHTML = html;
+    },
+
+    renderFullWeek() {
+        const container = document.getElementById('full-week-container');
+        const prog = PROGRAM_DATA[this.activeProgramId];
+        if (!prog || !container) return;
+
+        let html = '';
+        const dayConfigs = [
+            { border: 'border-t-amber-500', icon: '🏛️' },
+            { border: 'border-t-emerald-500', icon: '🌙' },
+            { border: 'border-t-blue-500', icon: '🚀' },
+            { border: 'border-t-indigo-500', icon: '🧠' },
+            { border: 'border-t-rose-500', icon: '🕌' },
+            { border: 'border-t-[var(--sys-purple)]', icon: '🎨' },
+            { border: 'border-t-[var(--sys-cyan)]', icon: '🛡️' }
+        ];
+
+        [0, 1, 2, 3, 4, 5, 6].forEach(dayIdx => {
+            const blocks = prog.days[dayIdx] || [];
+            const config = dayConfigs[dayIdx];
+            
+            html += `
+            <div class="sl-panel p-5 border-t-4 ${config.border} mb-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl">${config.icon}</span>
+                    <h3 class="text-lg font-black text-white uppercase">${Utils.getDayName(dayIdx)}</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    ${blocks.map(b => `
+                        <div class="bg-slate-950/60 p-3 rounded border border-slate-800 hover:border-slate-600 transition">
+                            <div class="text-[10px] sys-font text-[var(--sys-cyan)] mb-2 bg-black/40 inline-block px-2 py-0.5 rounded" dir="ltr">${b.timeStr}</div>
+                            <h4 class="text-sm font-bold text-white mb-1">${b.title}</h4>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">${b.desc}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        });
+        
+        container.innerHTML = html;
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    Charter.init();
+    setInterval(() => Charter.renderToday(), 60000);
+});
+</script>
+</body>
+</html>

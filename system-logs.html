@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERFORMANCE ANALYTICS | ASCENDING ALONE RPG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        :root {
+            --sys-cyan: #00f0ff;
+            --sys-cyan-glow: rgba(0, 240, 255, 0.6);
+            --sys-purple: #9d4edd;
+            --sys-purple-glow: rgba(157, 78, 221, 0.4);
+            --sys-bg-dark: #02040a;
+            --sys-panel: rgba(5, 10, 25, 0.85);
+            --sys-border: rgba(0, 240, 255, 0.3);
+            --sys-red: #ef4444;
+            --sys-green: #10b981;
+            --sys-emerald: #059669;
+            --sys-rose: #e11d48;
+        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--sys-bg-dark);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .sys-font { font-family: 'Rajdhani', sans-serif; letter-spacing: 0.05em; }
+        .sl-panel {
+            background: var(--sys-panel);
+            backdrop-filter: blur(16px);
+            border: 2px solid var(--sys-border);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.1);
+            position: relative;
+        }
+        .sl-panel::before, .sl-panel::after {
+            content: ''; position: absolute; width: 20px; height: 20px;
+            pointer-events: none;
+        }
+        .sl-panel::before { top: -2px; left: -2px; border-top: 3px solid var(--sys-cyan); border-left: 3px solid var(--sys-cyan); }
+        .sl-panel::after { bottom: -2px; right: -2px; border-bottom: 3px solid var(--sys-cyan); border-right: 3px solid var(--sys-cyan); }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--sys-cyan); }
+
+        .animate-system-pop {
+            animation: systemPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        @keyframes systemPop {
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .chart-glow {
+            filter: drop-shadow(0 0 12px currentColor);
+        }
+        
+        .panel-daily { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 0 20px rgba(0,240,255,0.05); }
+        .panel-weekly { border-color: rgba(157, 78, 221, 0.4); box-shadow: 0 0 20px rgba(157,78,221,0.05); }
+        .panel-monthly { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 20px rgba(16,185,129,0.05); }
+        .panel-yearly { border-color: rgba(225, 29, 72, 0.4); box-shadow: 0 0 20px rgba(225,29,72,0.05); }
+    </style>
+</head>
+<body class="p-2 md:p-6">
+<div class="sov-secondary-bg" aria-hidden="true"></div>
+
+    <div class="max-w-[1500px] mx-auto space-y-6 relative z-10">
+
+        <!-- HEADER -->
+        <header class="sl-panel p-4 md:p-6 flex flex-col lg:flex-row justify-between items-center gap-4 animate-system-pop" style="border-color: rgba(0, 240, 255, 0.6);">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-[var(--sys-cyan)]/10 border border-[var(--sys-cyan)] flex items-center justify-center text-xl shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                    📈
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black tracking-wide text-white">PERFORMANCE ANALYTICS</h1>
+                    <p class="text-xs text-[var(--sys-cyan)] sys-font tracking-widest">SOVEREIGN PROGRESSION & DATA TELEMETRY</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-4 bg-slate-950/60 px-6 py-3 rounded-lg border border-slate-800">
+                <div class="text-center">
+                    <span class="block text-[10px] text-slate-500 sys-font">LEVEL</span>
+                    <span id="player-level" class="text-2xl font-black text-white sys-font">1</span>
+                </div>
+                <div class="h-8 w-[1px] bg-slate-800"></div>
+                <div class="text-right min-w-[200px]">
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="block text-[10px] text-slate-500 sys-font">EXP PROGRESS</span>
+                        <span id="xp-text" class="text-[10px] text-[var(--sys-cyan)] sys-font font-bold">0 / 100</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden shadow-inner border border-slate-700">
+                        <div id="player-xp-bar" class="bg-[var(--sys-cyan)] h-full transition-all duration-700 relative shadow-[0_0_10px_var(--sys-cyan)]" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVIGATION -->
+        <nav id="sovereign-nav" class="flex flex-wrap gap-3 justify-center md:justify-start items-center p-4 bg-slate-950/60 border border-slate-800/50 backdrop-blur-md rounded-lg my-4 select-none">
+    <a href="index11.html" target="_self" class="px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>🏠</span> <span>DASHBOARD</span>
+    </a>
+    <a href="operational-charter.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>📜</span> <span>CHARTER</span>
+    </a>
+    <a href="active-quests.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>⚔️️</span> <span>ACTIVE QUESTS</span>
+    </a>
+    <a href="brain-stats.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>🧠</span> <span>BRAIN STATS</span>
+    </a>
+    <a href="system-logs.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>📈</span> <span>ANALYTICS</span>
+    </a>
+</nav>
+
+        <!-- MAIN LAYOUT: GLOBAL STATS -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-system-pop" style="animation-delay: 0.1s;">
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-lg flex flex-col justify-center text-center relative overflow-hidden">
+                <span class="text-[10px] text-slate-500 font-bold sys-font tracking-widest uppercase mb-1">Current Authority</span>
+                <div class="text-lg font-black text-white sys-font tracking-wide z-10" id="perf-rank-title">SCANNING...</div>
+                <div class="mt-2 w-full bg-slate-800 h-1 rounded-full overflow-hidden z-10">
+                    <div id="perf-rank-bar" class="bg-gradient-to-r from-[var(--sys-purple)] to-[var(--sys-cyan)] h-full w-0 transition-all duration-1000"></div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-lg flex flex-col items-center justify-center">
+                <span class="text-[10px] text-slate-500 font-bold sys-font uppercase tracking-wider mb-1">EXACT LEVEL</span>
+                <span id="stat-exact-level" class="text-2xl font-black text-[var(--sys-cyan)] sys-font drop-shadow-[0_0_8px_var(--sys-cyan-glow)]">1.000</span>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-lg flex flex-col items-center justify-center">
+                <span class="text-[10px] text-slate-500 font-bold sys-font uppercase tracking-wider mb-1">GROWTH RATE (30D)</span>
+                <span class="text-2xl font-black text-[var(--sys-green)] sys-font drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">+<span id="stat-growth">0.0</span>%</span>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-lg flex flex-col items-center justify-center">
+                <span class="text-[10px] text-slate-500 font-bold sys-font uppercase tracking-wider mb-1">SYSTEM STATUS</span>
+                <span class="px-3 py-1 text-[11px] font-black rounded sys-font tracking-widest border border-[var(--sys-cyan)] text-[var(--sys-cyan)] bg-[var(--sys-cyan)]/10 animate-pulse mt-1">
+                    OPTIMAL
+                </span>
+            </div>
+        </div>
+
+        <!-- CHARTS GRID -->
+        <main class="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-10">
+            
+            <!-- DAILY CHART -->
+            <div class="sl-panel panel-daily p-5 rounded-xl flex flex-col animate-system-pop" style="animation-delay: 0.2s;">
+                <div class="flex justify-between items-start mb-4 border-b border-slate-800/80 pb-3">
+                    <div>
+                        <h2 class="text-lg font-black text-white flex items-center gap-2">
+                            <span class="text-[var(--sys-cyan)]">⚡</span> Daily Level Analysis (Hourly)
+                        </h2>
+                        <p class="text-[10px] text-slate-400 sys-font tracking-wider mt-1">REAL-TIME MICRO PROGRESSION (24H)</p>
+                    </div>
+                </div>
+                <div class="flex-1 bg-slate-950/50 border border-slate-800/50 rounded-lg p-3 relative min-h-[280px]">
+                    <div id="chart-daily-container" class="w-full h-full text-[var(--sys-cyan)] chart-glow"></div>
+                </div>
+            </div>
+
+            <!-- WEEKLY CHART -->
+            <div class="sl-panel panel-weekly p-5 rounded-xl flex flex-col animate-system-pop" style="animation-delay: 0.3s;">
+                <div class="flex justify-between items-start mb-4 border-b border-slate-800/80 pb-3">
+                    <div>
+                        <h2 class="text-lg font-black text-white flex items-center gap-2">
+                            <span class="text-[var(--sys-purple)]">📅</span> Weekly Level Analysis
+                        </h2>
+                        <p class="text-[10px] text-slate-400 sys-font tracking-wider mt-1">7-DAY ASCENSION TREND</p>
+                    </div>
+                </div>
+                <div class="flex-1 bg-slate-950/50 border border-slate-800/50 rounded-lg p-3 relative min-h-[280px]">
+                    <div id="chart-weekly-container" class="w-full h-full text-[var(--sys-purple)] chart-glow"></div>
+                </div>
+            </div>
+
+            <!-- MONTHLY CHART -->
+            <div class="sl-panel panel-monthly p-5 rounded-xl flex flex-col animate-system-pop" style="animation-delay: 0.4s;">
+                <div class="flex justify-between items-start mb-4 border-b border-slate-800/80 pb-3">
+                    <div>
+                        <h2 class="text-lg font-black text-white flex items-center gap-2">
+                            <span class="text-[var(--sys-green)]">📊</span> Monthly Level Analysis
+                        </h2>
+                        <p class="text-[10px] text-slate-400 sys-font tracking-wider mt-1">30-DAY MACRO PROGRESSION</p>
+                    </div>
+                </div>
+                <div class="flex-1 bg-slate-950/50 border border-slate-800/50 rounded-lg p-3 relative min-h-[280px]">
+                    <div id="chart-monthly-container" class="w-full h-full text-[var(--sys-green)] chart-glow"></div>
+                </div>
+            </div>
+
+            <!-- YEARLY CHART -->
+            <div class="sl-panel panel-yearly p-5 rounded-xl flex flex-col animate-system-pop" style="animation-delay: 0.5s;">
+                <div class="flex justify-between items-start mb-4 border-b border-slate-800/80 pb-3">
+                    <div>
+                        <h2 class="text-lg font-black text-white flex items-center gap-2">
+                            <span class="text-[var(--sys-rose)]">🌌</span> Yearly Level Analysis
+                        </h2>
+                        <p class="text-[10px] text-slate-400 sys-font tracking-wider mt-1">12-MONTH GRAND TRAJECTORY</p>
+                    </div>
+                </div>
+                <div class="flex-1 bg-slate-950/50 border border-slate-800/50 rounded-lg p-3 relative min-h-[280px]">
+                    <div id="chart-yearly-container" class="w-full h-full text-[var(--sys-rose)] chart-glow"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // ==========================================
+        // CORE SYNCHRONIZER (Level & XP Only)
+        // ==========================================
+        const PlayerSync = {
+            data: { level: 1, xp: 0 },
+            init() {
+                this.load();
+                this.updateUI();
+            },
+            load() {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('monarch_system_data') || '{}');
+                    this.data.level = saved.level || 1;
+                    this.data.xp = saved.xp || 0;
+                } catch(e) {}
+            },
+            updateUI() {
+                const lvlEl = document.getElementById('player-level');
+                const barEl = document.getElementById('player-xp-bar');
+                const xpText = document.getElementById('xp-text');
+                
+                if(lvlEl) lvlEl.textContent = this.data.level;
+                
+                const needed = this.data.level * 100;
+                if(xpText) xpText.textContent = `${Math.floor(this.data.xp)} / ${needed}`;
+
+                if(barEl) {
+                    const pct = Math.min((this.data.xp / needed) * 100, 100);
+                    barEl.style.width = `${pct}%`;
+                }
+
+                this.calculateAuthority();
+            },
+            calculateAuthority() {
+                const baseLvl = this.data.level;
+                const rankEl = document.getElementById('perf-rank-title');
+                const rankBar = document.getElementById('perf-rank-bar');
+                let title = "Recruit Shadow";
+                let progress = (baseLvl / 50) * 100;
+
+                if (baseLvl >= 1000) { title = "ABSOLUTE SOVEREIGN"; progress = 100; }
+                else if (baseLvl >= 800) { title = "Divine Architect"; progress = ((baseLvl-800)/200)*100; }
+                else if (baseLvl >= 600) { title = "Tech Warlord"; progress = ((baseLvl-600)/200)*100; }
+                else if (baseLvl >= 450) { title = "Shadow Monarch"; progress = ((baseLvl-450)/150)*100; }
+                else if (baseLvl >= 50) { title = "Elite Knight"; progress = ((baseLvl-50)/400)*100; }
+
+                if (rankEl) rankEl.textContent = title;
+                if (rankBar) rankBar.style.width = `${Math.min(100, Math.max(6, progress))}%`;
+            }
+        };
+
+        // ==========================================
+        // ANALYTICS ENGINE & SVG CHART GENERATOR
+        // ==========================================
+        const DashboardAnalytics = {
+            init() {
+                PlayerSync.init();
+                const exactLevel = this.calculateExactLevel();
+                document.getElementById('stat-exact-level').textContent = exactLevel.toFixed(3);
+                
+                // Generate the four charts
+                this.generateChart('chart-daily-container', this.generateMockData(8, exactLevel, 0.05, ['00:00','03:00','06:00','09:00','12:00','15:00','18:00','21:00']), 'var(--sys-cyan)', 'daily');
+                this.generateChart('chart-weekly-container', this.generateMockData(7, exactLevel, 0.5, ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']), 'var(--sys-purple)', 'weekly');
+                this.generateChart('chart-monthly-container', this.generateMockData(6, exactLevel, 3.0, ['Week 1','Week 2','Week 3','Week 4','Week 5','Now']), 'var(--sys-green)', 'monthly');
+                this.generateChart('chart-yearly-container', this.generateMockData(12, exactLevel, 15.0, ['January','February','March','April','May','June','July','August','September','October','November','December']), 'var(--sys-rose)', 'yearly');
+
+                // Calculate dummy growth percentage based on data
+                document.getElementById('stat-growth').textContent = (Math.random() * (12.5 - 2.1) + 2.1).toFixed(1);
+            },
+            
+            calculateExactLevel() {
+                const level = PlayerSync.data.level;
+                const xp = PlayerSync.data.xp;
+                const neededXp = level * 100;
+                return level + (xp / neededXp);
+            },
+
+            // Generate ascending realistic mock data to feed the charts
+            generateMockData(pointsCount, currentExactLevel, spread, labels) {
+                let data = [];
+                for (let i = pointsCount - 1; i >= 0; i--) {
+                    // Make data appear realistic and ascending, ending at the current level
+                    let val = Math.max(1, currentExactLevel - (i * spread) + (Math.random() * (spread * 0.3)));
+                    if(i === 0) val = currentExactLevel; // The last point is exactly the current level
+                    data.push({
+                        label: labels[pointsCount - 1 - i],
+                        val: val
+                    });
+                }
+                return data;
+            },
+
+            generateChart(containerId, chartData, colorHex, idPrefix) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                // Default dimensions
+                const width = container.clientWidth || 800;
+                const height = container.clientHeight || 280;
+                const paddingX = 40;
+                const paddingY = 40;
+                const graphW = width - paddingX * 2;
+                const graphH = height - paddingY * 2;
+
+                const maxVal = Math.max(...chartData.map(d => d.val));
+                const minVal = Math.min(...chartData.map(d => d.val));
+                const range = maxVal === minVal ? 1 : (maxVal - minVal) * 1.2;
+
+                const points = chartData.map((d, i) => {
+                    const x = paddingX + (i / (chartData.length - 1)) * graphW;
+                    const y = height - paddingY - ((d.val - minVal) / range) * graphH;
+                    return { x, y, label: d.label, val: d.val };
+                });
+
+                // Draw curve (Bezier Curve)
+                let pathD = `M ${points[0].x} ${points[0].y} `;
+                let areaD = `M ${points[0].x} ${height - paddingY} L ${points[0].x} ${points[0].y} `;
+                for (let i = 1; i < points.length; i++) {
+                    const cx = (points[i-1].x + points[i].x) / 2;
+                    pathD += `C ${cx} ${points[i-1].y}, ${cx} ${points[i].y}, ${points[i].x} ${points[i].y} `;
+                    areaD += `C ${cx} ${points[i-1].y}, ${cx} ${points[i].y}, ${points[i].x} ${points[i].y} `;
+                }
+                areaD += `L ${points[points.length - 1].x} ${height - paddingY} Z`;
+
+                const gradId = `grad_${idPrefix}`;
+                
+                container.innerHTML = `
+                <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" class="overflow-visible" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="${colorHex}" stop-opacity="0.25"/>
+                            <stop offset="100%" stop-color="var(--sys-bg-dark)" stop-opacity="0.0"/>
+                        </linearGradient>
+                        <filter id="neonGlow_${idPrefix}" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="6" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                    </defs>
+                    
+                    <!-- Grid Lines -->
+                    <line x1="${paddingX}" y1="${paddingY}" x2="${width-paddingX}" y2="${paddingY}" stroke="rgba(255,255,255,0.03)" stroke-width="1" stroke-dasharray="4" />
+                    <line x1="${paddingX}" y1="${height/2}" x2="${width-paddingX}" y2="${height/2}" stroke="rgba(255,255,255,0.03)" stroke-width="1" stroke-dasharray="4" />
+                    <line x1="${paddingX}" y1="${height-paddingY}" x2="${width-paddingX}" y2="${height-paddingY}" stroke="${colorHex}" stroke-width="1" stroke-opacity="0.3" />
+                    
+                    <!-- Area & Path -->
+                    <path d="${areaD}" fill="url(#${gradId})" />
+                    <path d="${pathD}" fill="none" stroke="${colorHex}" stroke-width="3" filter="url(#neonGlow_${idPrefix})" stroke-linecap="round" />
+                    <path d="${pathD}" fill="none" stroke="#fff" stroke-width="1" opacity="0.8" />
+                    
+                    <!-- Nodes & Labels -->
+                    ${points.map(p => `
+                        <g class="group cursor-crosshair transition-all duration-300">
+                            <!-- Vertical line on hover -->
+                            <line x1="${p.x}" y1="${p.y}" x2="${p.x}" y2="${height-paddingY}" stroke="${colorHex}" stroke-opacity="0" stroke-width="1" stroke-dasharray="2" class="group-hover:stroke-opacity-50 transition-opacity" />
+                            
+                            <circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--sys-bg-dark)" stroke="${colorHex}" stroke-width="2" class="transition-all duration-300 group-hover:r-6 group-hover:fill-[${colorHex}] shadow-lg" />
+                            
+                            <!-- Value Label -->
+                            <text x="${p.x}" y="${p.y - 15}" text-anchor="middle" fill="#fff" font-size="11" class="sys-font font-black drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity">${p.val.toFixed(2)}</text>
+                            
+                            <!-- X Axis Label -->
+                            <text x="${p.x}" y="${height - 15}" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="10" class="font-cairo font-bold">${p.label}</text>
+                        </g>
+                    `).join('')}
+                </svg>`;
+            }
+        };
+
+        // Initialize on load
+        window.addEventListener('resize', () => DashboardAnalytics.init()); // Re-render charts on resize
+        document.addEventListener('DOMContentLoaded', () => {
+            DashboardAnalytics.init();
+            
+            // Sync with other tabs if applicable
+            window.addEventListener('storage', (e) => {
+                if(e.key === 'monarch_system_data') {
+                    DashboardAnalytics.init();
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSTEM INITIALIZATION | ASCENDING ALONE RPG</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <base target="_blank">
+
+    <style>
+        :root {
+            --sys-cyan: #00f0ff;
+            --sys-cyan-glow: rgba(0, 240, 255, 0.6);
+            --sys-purple: #9d4edd;
+            --sys-purple-glow: rgba(157, 78, 221, 0.4);
+            --sys-bg-dark: #02040a;
+            --sys-panel: rgba(5, 10, 25, 0.85);
+            --sys-border: rgba(0, 240, 255, 0.3);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--sys-bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 50%, var(--sys-cyan-glow) 0%, transparent 25%),
+                radial-gradient(circle at 85% 30%, var(--sys-purple-glow) 0%, transparent 25%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-attachment: fixed;
+        }
+
+        .sys-font { font-family: 'Rajdhani', sans-serif; letter-spacing: 0.05em; }
+
+        .sl-panel {
+            background: var(--sys-panel);
+            backdrop-filter: blur(16px);
+            border: 2px solid var(--sys-border);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.1);
+            position: relative;
+        }
+
+        .sl-panel::before, .sl-panel::after {
+            content: ''; position: absolute; width: 20px; height: 20px;
+            pointer-events: none;
+        }
+        .sl-panel::before { top: -2px; left: -2px; border-top: 3px solid var(--sys-cyan); border-left: 3px solid var(--sys-cyan); }
+        .sl-panel::after { bottom: -2px; right: -2px; border-bottom: 3px solid var(--sys-cyan); border-right: 3px solid var(--sys-cyan); }
+
+        .sl-glow-text {
+            color: var(--sys-cyan);
+            text-shadow: 0 0 8px var(--sys-cyan-glow);
+        }
+
+        @keyframes systemPopIn {
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); filter: brightness(2); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+        .animate-system-pop { animation: systemPopIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        .sl-btn {
+            background: linear-gradient(180deg, rgba(0, 240, 255, 0.05) 0%, rgba(5, 10, 25, 0.8) 100%);
+            border: 1px solid var(--sys-cyan);
+            transition: var(--transition);
+        }
+        .sl-btn:hover {
+            box-shadow: 0 0 20px rgba(0,240,255,0.4);
+            background: rgba(0,240,255,0.15);
+            transform: translateY(-1px);
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--sys-cyan); }
+
+        .progress-bar-container {
+            position: relative;
+            width: 100%;
+            height: 14px;
+            background-color: rgba(5, 10, 25, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            overflow: hidden;
+            will-change: width;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;
+            position: relative;
+        }
+
+        .xp-fill { background: linear-gradient(90deg, var(--sys-cyan), #00a8ff); box-shadow: 0 0 10px var(--sys-cyan-glow); }
+        .hp-fill { background: linear-gradient(90deg, #10b981, #059669); box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+        .mp-fill { background: linear-gradient(90deg, #6366f1, #4338ca); box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+        .fatigue-fill { background: linear-gradient(90deg, #eab308, #d97706); box-shadow: 0 0 10px rgba(234, 179, 8, 0.4); }
+
+        .bar-text-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9), 0 0 5px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+            letter-spacing: 0.05em;
+            z-index: 2;
+        }
+
+        @keyframes criticalPulseSystem {
+            0%, 100% { box-shadow: inset 0 0 15px rgba(220, 38, 38, 0.2), 0 0 10px rgba(220, 38, 38, 0.3); border-color: rgba(220, 38, 38, 0.4); }
+            50% { box-shadow: inset 0 0 25px rgba(220, 38, 38, 0.5), 0 0 20px rgba(220, 38, 38, 0.6); border-color: rgba(220, 38, 38, 0.8); }
+        }
+
+        .status-critical-bar {
+            animation: criticalPulseSystem 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            background: linear-gradient(90deg, #dc2626, #991b1b) !important;
+        }
+
+        .monarch-title-badge {
+            color: #bb86fc;
+            text-shadow: 0 0 8px rgba(187, 134, 252, 0.8);
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-left: 10px;
+            padding: 3px 10px;
+            border: 1px solid #bb86fc;
+            border-radius: 6px;
+            background: rgba(187, 134, 252, 0.1);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: none;
+            transition: all 0.3s ease;
+        }
+        .monarch-title-badge.active { display: inline-block; animation: systemPopIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .monarch-title-badgi { color: #bb86fc; text-shadow: 0 0 8px rgba(187, 134, 252, 0.8); font-size: 0.85rem; font-weight: bold; margin-left: 10px; padding: 3px 10px; letter-spacing: 1px; }
+        .monarch-title-badgie { color: #dcc300; text-shadow: 0 0 8px rgba(172, 141, 0, 0.8); font-size: 0.85rem; font-weight: bold; margin-left: 10px; padding: 3px 10px; letter-spacing: 1px; }
+        .monarch-title-badgiex { color: #dedede; text-shadow: 0 0 8px rgb(133, 133, 133); font-size: 0.85rem; font-weight: bold; margin-left: 10px; padding: 3px 10px; letter-spacing: 1px; }
+
+        .monarch-profile-card {
+            background: rgba(4, 8, 20, 0.9);
+            border: 1px solid var(--sys-cyan);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.05);
+            backdrop-filter: blur(12px);
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 2px solid var(--sys-cyan);
+            box-shadow: 0 0 15px var(--sys-cyan-glow);
+            overflow: hidden;
+            background: #02040a;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .avatar-wrapper:hover {
+            border-color: var(--sys-purple);
+            box-shadow: 0 0 20px rgba(157, 78, 221, 0.6);
+            transform: scale(1.03);
+        }
+
+        .avatar-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.9) contrast(1.1);
+        }
+
+        .avatar-uploader-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            cursor: pointer;
+            color: var(--sys-cyan);
+            font-size: 0.65rem;
+            font-weight: 900;
+            text-align: center;
+            border-radius: 50%;
+        }
+
+        .avatar-wrapper:hover .avatar-uploader-overlay { opacity: 1; }
+
+        @keyframes shadowIdleFloat { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-12px) scale(1.02); } }
+        @keyframes shadowPulseGlow { 0%, 100% { filter: drop-shadow(0 0 15px rgba(176,38,255,0.5)) drop-shadow(0 0 30px rgba(0,240,255,0.2)); } 50% { filter: drop-shadow(0 0 25px rgba(176,38,255,0.8)) drop-shadow(0 0 45px rgba(0,240,255,0.5)); } }
+        .live-shadow-active { animation: shadowIdleFloat 4s ease-in-out infinite, shadowPulseGlow 3s ease-in-out infinite; transition: all 0.5s ease-in-out; }
+
+        #sovereign-nav a.nav-item-active { background: rgba(0, 240, 255, 0.10) !important; border-color: var(--sys-cyan) !important; color: var(--sys-cyan) !important; box-shadow: 0 0 12px var(--sys-cyan-glow); }
+        .sov-identity-strip { display: flex; align-items: center; gap: 8px; margin-inline-start: auto; font-family: 'Rajdhani', sans-serif; white-space: nowrap; }
+        .sov-identity-strip [data-sov-name] { color: var(--sys-cyan); font-weight: 700; letter-spacing: 0.04em; font-size: 0.72rem; text-shadow: 0 0 6px var(--sys-cyan-glow); user-select: none; }
+        .sov-identity-strip [data-sov-title] { color: var(--sys-purple); font-weight: 600; font-style: italic; letter-spacing: 0.03em; font-size: 0.68rem; text-shadow: 0 0 6px var(--sys-purple-glow); user-select: none; }
+        .sov-identity-strip [data-sov-title]:empty { display: none; }
+        .sov-identity-strip [data-sov-level-chip] { font-size: 0.65rem; font-weight: 900; color: #02040a; background: var(--sys-cyan); padding: 1px 7px; border-radius: 999px; letter-spacing: 0.05em; }
+
+        .sov-secondary-bg { position: fixed; inset: 0; z-index: -2; overflow: hidden; background: var(--sys-bg-dark); pointer-events: none; }
+        .sov-secondary-bg::before, .sov-secondary-bg::after { content: ''; position: absolute; inset: -12%; will-change: transform, opacity; }
+        .sov-secondary-bg::before { background: radial-gradient(circle at 20% 28%, var(--sys-cyan-glow) 0%, transparent 32%), radial-gradient(circle at 82% 72%, var(--sys-purple-glow) 0%, transparent 34%); animation: sovMistDrift 18s ease-in-out infinite; }
+        .sov-secondary-bg::after { background-image: repeating-linear-gradient(115deg, transparent 0 140px, rgba(0, 240, 255, 0.05) 140px 141px, transparent 141px 280px), repeating-linear-gradient(25deg, transparent 0 180px, rgba(157, 78, 221, 0.05) 180px 181px, transparent 181px 360px); opacity: 0.55; animation: sovLinesFlow 26s linear infinite; }
+        @keyframes sovMistDrift { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.85; } 50% { transform: translate3d(2%, -2%, 0) scale(1.08); opacity: 1; } }
+        @keyframes sovLinesFlow { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-280px, 140px, 0); } }
+        @media (prefers-reduced-motion: reduce) { .sov-secondary-bg::before, .sov-secondary-bg::after { animation: none; } }
+
+        .sov-locked-content { position: relative; min-height: 220px; overflow: hidden; filter: saturate(0.4) brightness(0.5); pointer-events: none; user-select: none; }
+        .shadow-lock-overlay { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px; background: radial-gradient(circle at 50% 40%, rgba(10, 4, 20, 0.94) 0%, rgba(2, 4, 10, 0.98) 70%); backdrop-filter: blur(6px) saturate(0.6); border: 1px solid rgba(157, 78, 221, 0.4); box-shadow: inset 0 0 40px rgba(157, 78, 221, 0.12); pointer-events: auto; animation: shadowLockReveal 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .shadow-lock-overlay::before { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg, transparent 0 6px, rgba(157, 78, 221, 0.05) 6px 7px); pointer-events: none; }
+        .shadow-lock-icon { font-size: 2.2rem; filter: drop-shadow(0 0 14px rgba(157, 78, 221, 0.7)); animation: shadowLockPulse 2.4s ease-in-out infinite; }
+        .shadow-lock-title { font-family: 'Rajdhani', sans-serif; letter-spacing: 0.18em; font-size: 0.7rem; color: var(--sys-purple); text-transform: uppercase; text-shadow: 0 0 10px var(--sys-purple-glow); }
+        .shadow-lock-req { font-family: 'Cairo', sans-serif; font-size: 0.95rem; color: #e2e8f0; font-weight: 700; max-width: 320px; line-height: 1.6; }
+        .shadow-lock-req span { color: var(--sys-cyan); text-shadow: 0 0 8px var(--sys-cyan-glow); font-weight: 900; }
+        .shadow-lock-sub { font-family: 'Rajdhani', sans-serif; font-size: 0.68rem; color: #64748b; letter-spacing: 0.08em; }
+        @keyframes shadowLockPulse { 0%, 100% { filter: drop-shadow(0 0 10px rgba(157, 78, 221, 0.5)); transform: scale(1); } 50% { filter: drop-shadow(0 0 22px rgba(157, 78, 221, 0.9)); transform: scale(1.08); } }
+        @keyframes shadowLockReveal { 0% { opacity: 0; transform: scale(0.97); } 100% { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+
+<body class="p-2 md:p-6 relative text-slate-200">
+
+<div id="loadingScreen" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#02040a]">
+    <div class="sys-font text-3xl font-black text-[var(--sys-cyan)] animate-pulse mb-6 tracking-widest uppercase">
+        SYNCHRONIZING MONARCH DATA...
+    </div>
+    <div class="w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+        <div id="loadProgress" class="h-full bg-[var(--sys-cyan)] w-0 transition-all duration-300"></div>
+    </div>
+</div>
+
+<div class="max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-12 gap-6 relative z-10 mt-16" dir="ltr">
+
+    <aside class="xl:col-span-4 space-y-6">
+        <div class="sl-panel p-0 animate-system-pop overflow-hidden relative" style="border-color: rgba(157, 78, 221, 0.6); box-shadow: 0 0 30px rgba(157, 78, 221, 0.2), inset 0 0 20px rgba(0, 240, 255, 0.05);">
+            <div class="absolute inset-0 pointer-events-none" style="border: 1px solid rgba(0, 240, 255, 0.3); box-shadow: inset 0 0 40px rgba(0, 240, 255, 0.05);"></div>
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--sys-cyan)] to-transparent opacity-60"></div>
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--sys-purple)] to-transparent opacity-60"></div>
+
+            <div class="relative z-10 p-6">
+                <div class="flex justify-center mb-4">
+                    <div class="px-8 py-1 border border-[var(--sys-cyan)] bg-[var(--sys-cyan)]/5 relative">
+                        <div class="absolute -top-1 left-2 right-2 h-[1px] bg-[var(--sys-cyan)] shadow-[0_0_8px_var(--sys-cyan)]"></div>
+                        <div class="absolute -bottom-1 left-2 right-2 h-[1px] bg-[var(--sys-cyan)] shadow-[0_0_8px_var(--sys-cyan)]"></div>
+                        <h2 class="sys-font text-lg font-black tracking-[0.3em] text-[var(--sys-cyan)] uppercase text-center">STATUS</h2>
+                    </div>
+                </div>
+<div class="monarch-profile-card rounded-xl p-5 mb-6 relative overflow-hidden" dir="ltr">
+    
+    <div class="flex items-center justify-between gap-4 border-b border-[var(--sys-cyan)]/10 pb-4 mb-4">
+        <div class="flex items-center gap-4">
+            <div id="avatar-container" class="relative w-26 h-26 rounded-full p-1 transition-all duration-500">
+            <div class="avatar-wrapper flex-shrink-0">
+                <img id="monarch-avatar-display" class="avatar-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300f0ff'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" alt="Monarch Avatar">
+                <label for="avatar-file-input" class="avatar-uploader-overlay">
+                    <span>⚡</span>
+                    <span>???</span>
+                </label>
+                <input type="file" id="avatar-file-input" accept="image/*" class="hidden" onchange="PlayerState.updateAvatar(event)">
+            </div>
+</div>
+            <div class="space-y-1">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="sys-font text-[10px] text-[var(--sys-purple)] font-bold uppercase tracking-wider">JOB :</span>
+                    <span id="monarch-active-title" class="monarch-title-badge px-2 py-0.5 text-[10px] bg-purple-950/40 border border-purple-500/50 text-purple-300 rounded font-black">???</span>
+                </div>
+                <h2 id="playerNameDisplay" class="sys-font text-[14px] tracking-wider text-[var(--sys-cyan)] font-bold uppercase">???</h2>
+                <div class="monarch-title-badgi"></div>
+            </div>
+        </div>
+
+        <div class="text-center bg-black/40 border border-slate-800 rounded-lg px-4 py-2 min-w-[75px]">
+            <div class="sys-font text-3xl font-black text-white leading-none drop-shadow-[0_0_12px_rgba(0,240,255,0.6)]" id="currentLevel">1</div>
+            <div class="sys-font text-[9px] tracking-[0.1em] text-[var(--sys-cyan)] font-bold mt-1 uppercase">LEVEL</div>
+        </div>
+    </div>
+
+    <div class="space-y-2.5 mb-5 px-1">
+        <div class="flex items-center gap-3">
+            <span class="sys-font text-[10px] font-black text-emerald-400 w-12 text-left tracking-wider">XP</span>
+            <div class="flex-1 h-3 bg-slate-900/80 border border-slate-700 relative overflow-hidden rounded-sm">
+                <div id="xpBar" class="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-900 to-emerald-500 w-[0%] shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-700"></div>
+                <span id="xpText" class="absolute inset-0 flex items-center justify-center sys-font text-[9px] font-bold text-white/90 tracking-wider">0 / 100</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="border border-[var(--sys-purple)]/30 bg-black/40 p-4 relative rounded-md mb-4">
+        <div class="absolute -top-2.5 left-4 bg-[#02040a] px-2 border-x border-[var(--sys-purple)]/30">
+            <span class="sys-font text-[9px] text-[var(--sys-purple)] font-bold tracking-widest uppercase">Ratio</span>
+        </div>
+        <div class="text-center">
+            <div class="sys-font text-[9px] text-slate-500 uppercase tracking-widest mb-0.5">LETHALITY</div>
+            <div class="sys-font text-base font-bold text-rose-400" id="stat-lethality">0%</div>
+        </div>
+    </div>
+</div>
+               
+
+        <div class="sl-panel p-4 animate-system-pop" style="animation-delay: 0.1s;">
+                 <nav class="flex flex-wrap justify-center gap-2 md:gap-4 text-sm font-bold">
+    <nav id="sovereign-nav" class="flex flex-wrap gap-3 justify-center md:justify-start items-center p-4 bg-slate-950/60 border border-slate-850/50 backdrop-blur-md rounded-lg shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] my-4 select-none">
+        
+<div class="flex flex-wrap justify-between items-center mb-4 border-b border-slate-800 pb-2 gap-2 w-full">
+    <h4 id="taskListTitle" class="font-black text-sm text-[var(--sys-cyan)] tracking-wide uppercase sys-font">
+        ⚔️ Active Directives Log
+    </h4>
+    
+    <div class="flex items-center gap-2">
+        <button onclick="QuestSystem.setFilter('active')" id="btnFilterActive" 
+                class="sys-font text-[10px] font-bold px-3 py-1.5 rounded border border-amber-500/50 text-amber-400 bg-amber-950/30 hover:bg-amber-500 hover:text-black transition-all flex items-center gap-1">
+            ⏳ Current tasks
+        </button>
+        <button onclick="QuestSystem.setFilter('all')" id="btnFilterAll" 
+                class="sys-font text-[10px] font-bold px-3 py-1.5 rounded border border-[var(--sys-cyan)]/50 text-[var(--sys-cyan)] bg-cyan-950/30 hover:bg-[var(--sys-cyan)] hover:text-black transition-all flex items-center gap-1">
+            📜 All tasks
+        </button>
+    </div>
+</div> 
+     
+
+        <nav id="sovereign-nav" class="flex flex-wrap gap-3 justify-center md:justify-start items-center p-4 bg-slate-950/60 border border-slate-800/50 backdrop-blur-md rounded-lg my-4 select-none">
+           <nav id="sovereign-nav" class="flex flex-wrap gap-3 justify-center md:justify-start items-center p-4 bg-slate-950/60 border border-slate-800/50 backdrop-blur-md rounded-lg my-4 select-none">
+    <a href="index11.html" target="_self" class="px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>🏠</span> <span>DASHBOARD</span>
+    </a>
+    <a href="operational-charter.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>📜</span> <span>CHARTER</span>
+    </a>
+    <a href="active-quests.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>⚔️</span> <span>ACTIVE QUESTS</span>
+    </a>
+    <a href="brain-stats.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>🧠</span> <span>BRAIN STATS</span>
+    </a>
+    <a href="system-logs.html" target="_self" class="nav-item px-4 py-2 text-xs font-mono rounded font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+        <span>📈</span> <span>ANALYTICS</span>
+    </a>
+</nav>
+            <button onclick="SystemSaveManager.exportSaveFile()" class="nav-item px-4 py-2.5 text-xs font-mono rounded font-bold transition-all duration-300 ease-out flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                <span>💾</span> <span>Export Save</span>
+            </button>
+        </section>
+        <section>
+            <label class="nav-item px-4 py-2.5 text-xs font-mono rounded font-bold transition-all duration-300 ease-out flex items-center gap-1.5 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-[var(--sys-cyan)] hover:border-[var(--sys-cyan)] hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                <span>📂</span> <br> <span>Import Save</span>
+                <input type="file" accept=".json" class="hidden" onchange="SystemSaveManager.importSaveFile(event)">
+            </label>
+        </section>
+        <button onclick="SystemReset.confirmAndReset()" class="sl-btn w-full text-left p-3 rounded-sm flex justify-between items-center group !border-rose-500 hover:!bg-rose-950/30 mt-4">
+            <span class="sys-font text-sm font-black text-rose-500 group-hover:text-rose-400" style="color: red;">⚠️ 𝐒𝐘𝐒𝐓𝐄𝐌 𝐇𝐀𝐑𝐃 𝐑𝐄𝐒𝐄𝐓</span>
+            <span class="sys-font text-[10px] bg-rose-950 text-rose-500 px-2 py-0.5 border border-rose-500 animate-pulse">DANGER</span>
+        </button>
+    </nav>
+</nav>
+               
+        </div>
+    </aside>
+
+    <main class="xl:col-span-8 flex flex-col gap-6">
+
+        <div class="sl-panel p-4 flex flex-wrap justify-between items-center gap-4 bg-slate-950/80 animate-system-pop" style="animation-delay: 0.2s;">
+            <div class="flex items-center gap-4 text-white font-mono text-xs">
+                <span class="w-2 h-2 rounded-full bg-[var(--sys-cyan)] animate-ping"></span>
+                <span id="sysClock" class="font-black text-sm text-[var(--sys-cyan)] tracking-wider">00:00:00</span>
+                <div class="h-4 w-[1px] bg-slate-700"></div>
+                <span id="sysLocation" class="text-slate-400 font-bold">📍 Scanning Coordinates...</span>
+            </div>
+            <div class="flex items-center gap-4 text-xs font-bold">
+                <span id="sysTemp" class="text-[var(--sys-cyan)] font-black">--°C</span>
+                <div class="h-4 w-[1px] bg-slate-700"></div>
+                <span id="sysHumidity" class="text-[var(--sys-purple)] font-bold">--% Hum</span>
+            </div>
+        </div>
+
+        <div class="sl-panel p-6 border-r-4 border-r-[var(--sys-cyan)] flex flex-col md:flex-row justify-between items-center gap-4 animate-system-pop" style="animation-delay: 0.3s;">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="sys-font text-xs text-[var(--sys-cyan)] font-bold tracking-widest uppercase">[ CURRENT DIRECTIVE TIMER ]</span>
+                    <span id="timerStatus" class="sys-font text-[9px] px-2 py-0.5 bg-slate-800 border border-slate-600 text-slate-300 uppercase">Idle</span>
+                </div>
+                <h3 id="timerDisplay" class="text-5xl font-black font-mono tracking-widest text-white drop-shadow-[0_0_10px_rgba(0,240,255,0.4)]">05:00:00</h3>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="Pomodoro.toggle()" id="timerBtn" class="px-6 py-3 bg-[var(--sys-cyan)] text-black font-black text-sm uppercase tracking-wider transition-all hover:shadow-[0_0_15px_var(--sys-cyan)]">START</button>
+                <button onclick="Pomodoro.reset()" class="px-4 py-3 bg-slate-900 border border-slate-700 text-white font-bold hover:border-white transition-all">🔄</button>
+                <button onclick="UI.toggleTimerSettings()" class="px-4 py-3 bg-slate-900 border border-slate-700 text-white font-bold hover:border-[var(--sys-cyan)] transition-all">⚙️</button>
+            </div>
+        </div>
+
+        <div class="sl-panel p-5 border-l-4 border-l-[var(--sys-purple)] relative overflow-hidden animate-system-pop" style="animation-delay: 0.4s;">
+            <div class="absolute right-0 top-0 w-32 h-32 bg-[var(--sys-purple)] opacity-10 blur-[50px] rounded-full pointer-events-none"></div>
+            <div class="sys-font text-[10px] text-[var(--sys-purple)] mb-2 uppercase flex items-center gap-2 font-bold tracking-widest">
+                <span class="w-1.5 h-1.5 bg-[var(--sys-purple)] rounded-full"></span> SYSTEM MESSAGE
+            </div>
+            <p id="motivationalQuote" class="sys-font text-base text-slate-200 font-medium tracking-wide">
+                [Analyzing Operational Charter...]
+            </p>
+        </div>
+
+        <div id="tasksView" class="flex flex-col flex-grow space-y-4 animate-system-pop" style="animation-delay: 0.5s;">
+            <section id="taskInputSection" class="sl-panel p-3 flex flex-wrap gap-2 items-center focus-within:border-[var(--sys-cyan)] transition-colors relative">
+                <div class="sys-font text-[10px] text-[var(--sys-cyan)] absolute -top-2 left-4 bg-[var(--sys-bg-dark)] px-2">NEW INSTANT QUEST</div>
+                <input type="text" id="taskInput" placeholder="Deploy new custom directive..." class="flex-grow bg-transparent border-none outline-none px-4 py-3 text-sm font-medium placeholder:text-slate-600 text-white">
+                <div class="flex gap-2 p-2 w-full md:w-auto">
+                    <select id="prioritySelect" class="bg-[var(--sys-bg-dark)] sys-font font-bold px-3 py-2 border border-[var(--sys-cyan)] border-opacity-30 text-[var(--sys-cyan)] text-xs outline-none">
+                        <option value="high">S-RANK</option>
+                        <option value="medium" selected>A-RANK</option>
+                        <option value="low">C-RANK</option>
+                    </select>
+                    <select id="statSelect" class="bg-[var(--sys-bg-dark)] sys-font font-bold px-3 py-2 border border-[var(--sys-purple)] border-opacity-30 text-[var(--sys-purple)] text-xs outline-none">
+                        <option value="int">🧠 INT</option>
+                        <option value="str">💪 STR</option>
+                        <option value="vit">🛡️ VIT</option>
+                        <option value="agi">⚡ AGI</option>
+                        <option value="sen">👁️ SEN</option>
+                    </select>
+                    <button onclick="QuestSystem.addTask()" class="sl-btn px-6 py-2 font-black text-xs text-white uppercase tracking-widest">ADD</button>
+                </div>
+            </section>
+
+            <div class="sl-panel p-4 flex-grow">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
+                    <h4 id="taskListTitle" class="font-black text-sm text-[var(--sys-cyan)] tracking-wide uppercase sys-font">⚔️ Active Directives Log</h4>
+                    <button onclick="Router.navigate('all')" id="backToAllBtn" class="hidden sys-font text-[10px] font-bold text-[var(--sys-purple)] hover:text-white transition-colors tracking-widest uppercase border border-[var(--sys-purple)] px-3 py-1 hover:bg-[var(--sys-purple)]">
+                        ← ALL DIRECTIVES
+                    </button>
+                </div>
+                <div id="taskContainer" class="space-y-2 min-h-[250px] overflow-y-auto pr-2"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="timerModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-black/80 backdrop-blur-sm transition-opacity">
+    <div class="sl-panel p-8 w-full max-w-sm mx-4">
+        <h3 class="sys-font text-xl font-black text-[var(--sys-cyan)] mb-6 text-center uppercase tracking-widest border-b border-white/10 pb-4">Set Quest Timer</h3>
+        <div class="flex justify-center gap-6 mb-8 text-center">
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Hours</label>
+                <input type="number" id="inputHours" min="0" max="23" value="5" class="w-20 bg-black/50 border border-[var(--sys-cyan)] py-3 text-center text-2xl sys-font text-white outline-none focus:shadow-[0_0_15px_var(--sys-cyan)]">
+            </div>
+            <div class="text-3xl text-[var(--sys-cyan)] font-bold self-center pt-4">:</div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Minutes</label>
+                <input type="number" id="inputMinutes" min="0" max="59" value="0" class="w-20 bg-black/50 border border-[var(--sys-cyan)] py-3 text-center text-2xl sys-font text-white outline-none focus:shadow-[0_0_15px_var(--sys-cyan)]">
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="Pomodoro.saveSettings()" class="flex-1 sl-btn text-white font-bold py-3 uppercase sys-font tracking-widest">Confirm</button>
+            <button onclick="UI.toggleTimerSettings()" class="flex-1 bg-transparent border border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-white font-bold py-3 transition-colors uppercase sys-font">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="milestoneModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-black/90 backdrop-blur-md transition-opacity">
+    <div class="sl-panel p-1 border-2 border-[var(--sys-cyan)] w-full max-w-2xl mx-4 text-center animate-system-pop overflow-hidden shadow-[0_0_50px_rgba(0,240,255,0.4)]">
+        <div class="border border-[var(--sys-purple)] p-10">
+            <div class="sys-font text-[var(--sys-cyan)] tracking-[0.5em] mb-2 font-bold drop-shadow-[0_0_5px_var(--sys-cyan)]">SYSTEM NOTIFICATION</div>
+            <h2 class="sys-font text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-[var(--sys-cyan)] mb-1 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)]">
+                LEVEL UP
+            </h2>
+            <div class="text-white font-bold mb-8 tracking-widest text-lg">You have leveled up!</div>
+            <div class="flex justify-center items-center gap-6 mb-8">
+                <div class="sys-font text-4xl text-slate-500 line-through decoration-[var(--sys-purple)]" id="milestoneOldLevel">1</div>
+                <span class="text-3xl text-[var(--sys-cyan)]">➤</span>
+                <div class="sys-font text-6xl text-[var(--sys-cyan)] sl-glow-text font-black" id="milestoneLevelText">2</div>
+            </div>
+            <div class="bg-black/50 border-l-4 border-[var(--sys-purple)] p-4 text-left mb-8">
+                <p id="milestoneMessage" class="text-[var(--sys-cyan)] text-lg leading-relaxed font-bold">State recovered. All stats increased.</p>
+            </div>
+            <button onclick="Milestone.hide()" class="sl-btn text-white font-black py-4 px-16 text-lg tracking-widest uppercase sys-font border-2">ACCEPT</button>
+        </div>
+    </div>
+</div>
+
+<div id="animeSystemPopup" class="fixed inset-0 z-[10000] hidden flex items-center justify-center bg-black/85 backdrop-blur-sm transition-opacity duration-300">
+    <div class="relative bg-[#02040a]/95 border-2 border-[var(--sys-cyan)] shadow-[0_0_40px_rgba(0,240,255,0.2),inset_0_0_20px_rgba(0,240,255,0.1)] p-8 max-w-lg w-full mx-4 text-center animate-system-pop overflow-hidden">
+        <div class="sys-font text-[var(--sys-cyan)] tracking-[0.6em] text-[10px] mb-3 font-black animate-pulse">[ SYSTEM DIRECTIVE ]</div>
+        <h2 id="animePopupTitle" class="text-2xl md:text-3xl font-black text-white mb-4 drop-shadow-[0_0_8px_var(--sys-cyan)]">Quest Title</h2>
+        <div class="bg-black/60 border-y border-[var(--sys-cyan)]/30 py-5 mb-6 relative">
+            <p id="animePopupDesc" class="text-sm md:text-base text-slate-200 leading-relaxed font-bold">The detailed quest description will appear here in anime style.</p>
+        </div>
+        <div class="flex justify-between items-center text-xs sys-font text-amber-400 mb-6 font-black tracking-widest bg-amber-900/20 px-4 py-2 border border-amber-500/30">
+            <span id="animePopupTime">TIME: --:--</span>
+            <span id="animePopupReward">REWARD: +?? EXP</span>
+        </div>
+        <button onclick="AnimePopup.acceptQuest()" class="w-full py-4 bg-gradient-to-r from-[var(--sys-cyan)]/10 via-[var(--sys-cyan)]/20 to-[var(--sys-cyan)]/10 border border-[var(--sys-cyan)] text-[var(--sys-cyan)] font-black tracking-[0.2em] uppercase hover:bg-[var(--sys-cyan)] hover:text-black transition-all shadow-[0_0_15px_rgba(0,240,255,0.3)]">
+            ACCEPT QUEST
+        </button>
+    </div>
+</div>
+
+
+<script>
+// ==========================================
+// ENVIRONMENT SYSTEM (Location & Weather & Clock)
+// ==========================================
+const EnvironmentSystem = {
+    init() {
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('sysClock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+        }, 1000);
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => this.fetchWeather(position.coords.latitude, position.coords.longitude),
+                (error) => { document.getElementById('sysLocation').textContent = "📍 Location Denied"; }
+            );
+        } else {
+            document.getElementById('sysLocation').textContent = "📍 Geolocation Unavailable";
+        }
+    },
+    async fetchWeather(lat, lon) {
+        try {
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const geoData = await geoRes.json();
+            const city = geoData.address.city || geoData.address.town || geoData.address.village || "Unknown Location";
+            document.getElementById('sysLocation').textContent = `📍 ${city.toUpperCase()}`;
+            
+            const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=relativehumidity_2m`);
+            const weatherData = await weatherRes.json();
+            
+            const temp = weatherData.current_weather.temperature;
+            const humidity = weatherData.hourly.relativehumidity_2m[0];
+            
+            document.getElementById('sysTemp').textContent = `${temp}°C`;
+            document.getElementById('sysHumidity').textContent = `${humidity}% Hum`;
+        } catch (err) {
+            console.error("Environment Sync Error:", err);
+            document.getElementById('sysLocation').textContent = `📍 [${lat.toFixed(2)}, ${lon.toFixed(2)}]`;
+        }
+    }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    EnvironmentSystem.init();
+});
+
+// ==========================================
+// SYSTEM SAVE / IMPORT MANAGER
+// ==========================================
+const SystemSaveManager = {
+    exportSaveFile() {
+        if(window.SoundEffects) SoundEffects.playSystemClick();
+        const saveData = {
+            monarch_system_data: localStorage.getItem('monarch_system_data'),
+            SL_QUESTS: localStorage.getItem('SL_QUESTS'),
+            SL_SYS_TIMER: localStorage.getItem('SL_SYS_TIMER'),
+            equipped_avatar_border: localStorage.getItem('equipped_avatar_border')
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(saveData));
+        const dlAnchorElem = document.createElement('a');
+        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("download", "monarch_shadow_save.json");
+        document.body.appendChild(dlAnchorElem);
+        dlAnchorElem.click();
+        document.body.removeChild(dlAnchorElem);
+        if(window.Toast) Toast.show("System Data Exported Successfully", "success");
+    },
+    importSaveFile(event) {
+        if(window.SoundEffects) SoundEffects.playSystemClick();
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                if (importedData.monarch_system_data) localStorage.setItem('monarch_system_data', importedData.monarch_system_data);
+                if (importedData.SL_QUESTS) localStorage.setItem('SL_QUESTS', importedData.SL_QUESTS);
+                if (importedData.SL_SYS_TIMER) localStorage.setItem('SL_SYS_TIMER', importedData.SL_SYS_TIMER);
+                if (importedData.equipped_avatar_border) localStorage.setItem('equipped_avatar_border', importedData.equipped_avatar_border);
+                
+                alert("⚠️ SYSTEM OVERRIDE SUCCESSFUL. RELOADING...");
+                location.reload();
+            } catch (err) {
+                alert("Error: Invalid or corrupted save file");
+            }
+        };
+        reader.readAsText(file);
+    }
+};
+
+// ==========================================
+// LOADING SCREEN SYSTEM
+// ==========================================
+window.addEventListener('load', () => {
+    const prog = document.getElementById('loadProgress');
+    prog.style.width = '100%';
+    setTimeout(() => {
+        document.getElementById('loadingScreen').style.opacity = '0';
+        setTimeout(() => document.getElementById('loadingScreen').remove(), 500);
+    }, 1200);
+});
+
+// ==========================================
+// AVATAR BORDERS MAP
+// ==========================================
+const BORDER_STYLES_MAP = {
+    "border-shadow-recruit": "border-2 border-purple-900/60 shadow-[0_0_12px_rgba(176,38,255,0.4)]",
+    "border-elite-knight": "border-2 border-[var(--sys-cyan,#00f0ff)] shadow-[0_0_18px_rgba(0,240,255,0.7)] animate-pulse",
+    "border-shadow-commander": "border-4 border-double border-purple-600 shadow-[0_0_25px_rgba(147,51,234,0.9)]",
+    "border-shadow-monarch": "border-2 border-sys-gold shadow-[0_0_35px_rgba(255,215,0,0.95),_inset_0_0_15px_rgba(176,38,255,0.6)]"
+};
+
+function applyEquippedAvatarBorder() {
+    const avatarContainer = document.getElementById('avatar-container');
+    if (!avatarContainer) return;
+    const currentBorderId = localStorage.getItem('equipped_avatar_border');
+    Object.values(BORDER_STYLES_MAP).forEach(cssClass => {
+        cssClass.split(" ").forEach(cls => avatarContainer.classList.remove(cls));
+    });
+    if (currentBorderId && BORDER_STYLES_MAP[currentBorderId]) {
+        const targetClasses = BORDER_STYLES_MAP[currentBorderId].split(" ");
+        targetClasses.forEach(cls => avatarContainer.classList.add(cls));
+    }
+}
+window.addEventListener('DOMContentLoaded', applyEquippedAvatarBorder);
+
+// ==========================================
+// UTILITIES & UI
+// ==========================================
+const UI = {
+    toggleTimerSettings() {
+        if (typeof SoundEffects !== 'undefined') SoundEffects.playSystemClick();
+        document.getElementById('timerModal').classList.toggle('hidden');
+    }
+};
+
+const Toast = {
+    show(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        const colors = {
+            success: 'border-emerald-500 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]',
+            error: 'border-rose-500 text-rose-400 shadow-[0_0_15px_rgba(225,29,72,0.3)]',
+            info: 'border-[var(--sys-cyan)] text-[var(--sys-cyan)] shadow-[0_0_15px_rgba(0,240,255,0.3)]'
+        };
+        toast.className = `pointer-events-auto px-5 py-3 bg-[#02040a]/95 border backdrop-blur-md text-sm font-bold sys-font tracking-wide animate-system-pop ${colors[type] || colors.info}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
+    }
+};
+
+const SystemReset = {
+    confirmAndReset() {
+        if(window.SoundEffects) SoundEffects.playSystemClick();
+        const firstConfirm = confirm("⚠ Sovereign Security Warning: Are you sure you want to erase all data?\n(Level resets to 1, all Gold, XP, Quests, and Logs will be lost permanently).");
+        if (!firstConfirm) return;
+        const secondConfirm = confirm("‼️ Final Warning: This resets the system to zero. Execute 'Memory Wipe'?");
+        if (!secondConfirm) return;
+        const keysToReset = ['monarch_system_data', 'sovereign_active_quest', 'directive_start_time', 'sovereign_active_program', 'SL_QUESTS', 'sovereign_system_logs','sovereign_titles_index','sl_onboarding_complete','sl_player_data'];
+        keysToReset.forEach(key => localStorage.removeItem(key));
+        Object.keys(localStorage).forEach(key => { if (key.startsWith('title_cache_')) localStorage.removeItem(key); });
+        alert("🔄 Memory wiped and system fully reset. Redirecting to registration portal.");
+        window.location.href = 'index.html';
+    }
+};
+
+// ==========================================
+// SOUND EFFECTS
+// ==========================================
+const SoundEffects = {
+    track1: new Audio('SHADOWBORN.mp3'),
+    track2: new Audio('Kingdom_of_Iron.mp3'),
+    currentTrackNumber: null,
+    isMusicPlaying: false,
+    init() { this.track1.loop = true; this.track2.loop = true; },
+    toggleMusic(trackNumber) {
+        const icon1 = document.getElementById('musicIcon1');
+        const icon2 = document.getElementById('musicIcon2');
+        if (this.isMusicPlaying && this.currentTrackNumber === trackNumber) { this.stopAllAudio(); return; }
+        if (this.isMusicPlaying) this.stopAllAudio();
+        this.isMusicPlaying = true;
+        this.currentTrackNumber = trackNumber;
+        if (trackNumber === 1) { this.track1.play().catch(e=>console.log(e)); if (icon1) icon1.textContent = '⏸️'; if (icon2) icon2.textContent = '🎼'; } 
+        else if (trackNumber === 2) { this.track2.play().catch(e=>console.log(e)); if (icon1) icon1.textContent = '🎵'; if (icon2) icon2.textContent = '⏸️'; }
+    },
+    stopAllAudio() {
+        this.track1.pause(); this.track1.currentTime = 0;
+        this.track2.pause(); this.track2.currentTime = 0;
+        const icon1 = document.getElementById('musicIcon1'); const icon2 = document.getElementById('musicIcon2');
+        if (icon1) icon1.textContent = '🎵'; if (icon2) icon2.textContent = '🎼';
+        this.isMusicPlaying = false; this.currentTrackNumber = null;
+    },
+    playSystemClick() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
+            gain.gain.setValueAtTime(0.05, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+            osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.1);
+        } catch(e) {}
+    },
+    playSuccess() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, i) => {
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.1); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.3);
+                osc.connect(gain); gain.connect(ctx.destination); osc.start(ctx.currentTime + i * 0.1); osc.stop(ctx.currentTime + i * 0.1 + 0.3);
+            });
+        } catch(e) {}
+    },
+    playLevelUp() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const notes = [440, 554, 659, 880, 1108];
+            notes.forEach((freq, i) => {
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'square'; osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.15);
+                gain.gain.setValueAtTime(0.08, ctx.currentTime + i * 0.15); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.4);
+                osc.connect(gain); gain.connect(ctx.destination); osc.start(ctx.currentTime + i * 0.15); osc.stop(ctx.currentTime + i * 0.15 + 0.4);
+            });
+        } catch(e) {}
+    }
+};
+SoundEffects.init();
+
+// ==========================================
+// QUEST & PLAYER STATE LOGIC
+// ==========================================
+const PlayerState = {
+    data: { level: 1, xp: 0, gold: 0, title: "[]", avatar: "", stats: { str: 10, vit: 10, agi: 10, int: 10, sen: 10 }, inventory: [] },
+    init() {
+        let saved = localStorage.getItem('monarch_system_data');
+        if (saved) {
+            try { this.data = { ...this.data, ...JSON.parse(saved) }; } catch (e) {}
+        } else { this.save(); }
+        this.restoreAvatar(); this.updateUI(); this.updateNameDisplay();
+    },
+    restoreAvatar() {
+        const avatarImg = document.getElementById('monarch-avatar-display');
+        if (avatarImg && this.data.avatar && this.data.avatar.startsWith('data:image')) { avatarImg.src = this.data.avatar; }
+    },
+    save() {
+        try { localStorage.setItem('monarch_system_data', JSON.stringify(this.data)); } catch (e) {}
+    },
+    updateAvatar(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const base64Image = e.target.result;
+            this.data.avatar = base64Image;
+            document.getElementById('monarch-avatar-display').src = base64Image;
+            this.save();
+        };
+        reader.readAsDataURL(file);
+    },
+    addXP(amount) {
+        this.data.xp += amount;
+        if (this.data.xp < 0) this.data.xp = 0;
+        let xpNeeded = this.data.level * 100;
+        while (this.data.xp >= xpNeeded) {
+            this.data.xp -= xpNeeded; this.data.level++; xpNeeded = this.data.level * 100;
+            if(window.SoundEffects) SoundEffects.playLevelUp();
+            if(window.Milestone) Milestone.show(this.data.level);
+        }
+        this.save(); this.updateUI();
+    },
+    addGold(amount) { this.data.gold += amount; if (this.data.gold < 0) this.data.gold = 0; this.save(); this.updateUI(); },
+    updateNameDisplay() {
+        const nameEl = document.getElementById('playerNameDisplay');
+        if (nameEl && this.data.name) nameEl.textContent = this.data.name;
+        const titleEl = document.getElementById('monarch-active-title');
+        if (titleEl && this.data.title) titleEl.textContent = this.data.title;
+    },
+    updateUI() {
+        if(document.getElementById('currentLevel')) document.getElementById('currentLevel').textContent = this.data.level;
+        const xpNeeded = this.data.level * 100;
+        if(document.getElementById('xpText')) document.getElementById('xpText').textContent = `${this.data.xp} / ${xpNeeded}`;
+        if(document.getElementById('xpBar')) document.getElementById('xpBar').style.width = `${Math.min((this.data.xp / xpNeeded) * 100, 100)}%`;
+    }
+};
+
+const QuestSystem = {
+    tasks: [], filter: 'all',
+    init() { const saved = localStorage.getItem('SL_QUESTS'); this.tasks = saved ? JSON.parse(saved) : []; this.render(); },
+    setFilter(mode) { this.filter = mode; this.render(); },
+    addTask() {
+        if(window.SoundEffects) SoundEffects.playSystemClick();
+        const inp = document.getElementById('taskInput');
+        const prio = document.getElementById('prioritySelect').value;
+        const statSelect = document.getElementById('statSelect').value;
+        if(!inp || !inp.value.trim()) return;
+        this.tasks.unshift({ id: Date.now(), text: inp.value.trim(), priority: prio, completed: false, stat: statSelect });
+        inp.value = ''; this.save(); this.render();
+    },
+    toggleTask(id) {
+        const task = this.tasks.find(t => t.id === id);
+        if (!task) return;
+        task.completed = !task.completed;
+        if (task.completed) {
+            PlayerState.addXP(task.priority === 'high' ? 100 : task.priority === 'medium' ? 50 : 20);
+            if(window.SoundEffects) SoundEffects.playSuccess();
+        } else {
+            PlayerState.addXP(-(task.priority === 'high' ? 100 : task.priority === 'medium' ? 50 : 20));
+        }
+        this.save(); this.render();
+    },
+    deleteTask(id) {
+        if(window.SoundEffects) SoundEffects.playSystemClick();
+        this.tasks = this.tasks.filter(t => t.id !== id);
+        this.save(); this.render();
+    },
+    render() {
+        const container = document.getElementById('taskContainer');
+        if(!container) return; container.innerHTML = '';
+        const displayTasks = this.filter === 'active' ? this.tasks.filter(t => !t.completed) : this.tasks;
+        
+        let completedCount = this.tasks.filter(t => t.completed).length;
+        let lethalityRate = this.tasks.length > 0 ? Math.round((completedCount / this.tasks.length) * 100) : 0;
+        if(document.getElementById('stat-lethality')) document.getElementById('stat-lethality').textContent = `${lethalityRate}%`;
+
+        if (displayTasks.length === 0) { container.innerHTML = `<div class="text-center py-10 opacity-30 sys-font">[NO TASKS]</div>`; return; }
+        
+        displayTasks.forEach(task => {
+            const div = document.createElement('div');
+            div.className = `task-card flex items-center justify-between p-4 bg-slate-900/80 backdrop-blur-sm border-y border-y-slate-800 transition-all ${task.completed ? 'completed opacity-50' : ''}`;
+            div.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <button onclick="QuestSystem.toggleTask(${task.id})" class="w-6 h-6 rounded border-2 border-[var(--sys-cyan)] flex items-center justify-center hover:bg-[var(--sys-cyan)] hover:bg-opacity-20 transition-colors ${task.completed ? 'bg-[var(--sys-cyan)]' : ''}">
+                        ${task.completed ? '<span class="text-black text-xs font-black">✓</span>' : ''}
+                    </button>
+                    <div>
+                        <div class="font-bold text-white text-sm ${task.completed ? 'line-through text-slate-500' : ''}">${task.text}</div>
+                    </div>
+                </div>
+                <button onclick="QuestSystem.deleteTask(${task.id})" class="text-slate-600 hover:text-rose-500 transition-colors p-2">🗑️️</button>
+            `;
+            container.appendChild(div);
+        });
+    },
+    save() { localStorage.setItem('SL_QUESTS', JSON.stringify(this.tasks)); }
+};
+
+// ==========================================
+// POMODORO & MILESTONES
+// ==========================================
+const Pomodoro = {
+    defaultTime: parseInt(localStorage.getItem('SL_SYS_TIMER')) || (5 * 3600), timeLeft: 0, timer: null, isRunning: false,
+    init() { this.timeLeft = this.defaultTime; this.updateUI(); },
+    saveSettings() {
+        const h = parseInt(document.getElementById('inputHours').value) || 0;
+        const m = parseInt(document.getElementById('inputMinutes').value) || 0;
+        if ((h * 3600) + (m * 60) > 0) {
+            this.defaultTime = (h * 3600) + (m * 60);
+            localStorage.setItem('SL_SYS_TIMER', this.defaultTime.toString());
+            document.getElementById('timerModal').classList.add('hidden');
+            this.reset();
+        }
+    },
+    toggle() {
+        const btn = document.getElementById('timerBtn'); const st = document.getElementById('timerStatus');
+        if (this.isRunning) {
+            clearInterval(this.timer); btn.textContent = 'START';
+            st.textContent = 'PAUSED'; st.className = 'sys-font text-[9px] px-2 py-0.5 bg-amber-900 border border-amber-600 text-amber-300 uppercase';
+        } else {
+            if (this.timeLeft <= 0) this.timeLeft = this.defaultTime;
+            this.timer = setInterval(() => { if (this.timeLeft > 0) { this.timeLeft--; this.updateUI(); } else { this.finish(); } }, 1000);
+            btn.textContent = '⏸️';
+            st.textContent = 'IN COMBAT'; st.className = 'sys-font text-[9px] px-2 py-0.5 bg-rose-900 border border-rose-600 text-rose-300 uppercase animate-pulse';
+        }
+        this.isRunning = !this.isRunning;
+    },
+    reset() {
+        clearInterval(this.timer); this.timeLeft = this.defaultTime; this.isRunning = false;
+        document.getElementById('timerBtn').textContent = 'START';
+        const st = document.getElementById('timerStatus');
+        st.textContent = 'IDLE'; st.className = 'sys-font text-[9px] px-2 py-0.5 bg-slate-800 border border-slate-600 text-slate-300 uppercase';
+        this.updateUI();
+    },
+    finish() { clearInterval(this.timer); if(typeof SoundEffects !== 'undefined') SoundEffects.playSuccess(); this.reset(); },
+    updateUI() {
+        const h = Math.floor(this.timeLeft / 3600).toString().padStart(2, '0');
+        const m = Math.floor((this.timeLeft % 3600) / 60).toString().padStart(2, '0');
+        const s = (this.timeLeft % 60).toString().padStart(2, '0');
+        if(document.getElementById('timerDisplay')) document.getElementById('timerDisplay').textContent = `${h}:${m}:${s}`;
+    }
+};
+
+const Milestone = {
+    show(newLevel) {
+        document.getElementById('milestoneOldLevel').textContent = newLevel - 1;
+        document.getElementById('milestoneLevelText').textContent = newLevel;
+        document.getElementById('milestoneModal').classList.remove('hidden');
+    },
+    hide() { document.getElementById('milestoneModal').classList.add('hidden'); }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    PlayerState.init();
+    QuestSystem.init();
+    Pomodoro.init();
+});
+
+// ==========================================
+// SYSTEM MESSAGES & MOTIVATION
+// ==========================================
+const QuoteSystem = {
+    quotes: [
+        {
+            en: "Hard work today is the bridge to a better tomorrow.",
+            ko: "오늘의 노력은 더 나은 내일로 가는 다리입니다."
+        },
+        {
+            en: "Consistency beats intensity when intensity is inconsistent.",
+            ko: "일관성은 불규칙한 강도보다 낫습니다."
+        },
+        {
+            en: "Small steps taken daily lead to mountains climbed over years.",
+            ko: "매일의 작은 걸음은 수년 후 산을 오르게 합니다."
+        },
+        {
+            en: "The best investment you can make is in your own skills.",
+            ko: "당신이 할 수 있는 최고의 투자는 자신의 기술에 하는 것입니다."
+        },
+        {
+            en: "Excellence is not a single act, but a habit repeated daily.",
+            ko: "탁월함은 한 번의 행동이 아니라 매일 반복되는 습관입니다."
+        },
+        {
+            en: "Your hands were made to build, not just to hold.",
+            ko: "당신의 손은 잡기만 하라고 만들어진 것이 아니라 만들라고 만들어졌습니다."
+        },
+        {
+            en: "There is no shortcut to any place worth going.",
+            ko: "갈 가치가 있는 곳에는 지름길이 없습니다."
+        },
+        {
+            en: "Discipline is choosing between what you want now and what you want most.",
+            ko: "규율은 지금 원하는 것과 가장 원하는 것 사이의 선택입니다."
+        },
+        {
+            en: "The work you put in when no one is watching defines who you are.",
+            ko: "아무도 보지 않을 때 하는 일이 당신을 정의합니다."
+        },
+        {
+            en: "The seed that is planted today becomes the shade of tomorrow.",
+            ko: "오늘 심은 씨앗은 내일의 그늘이 됩니다."
+        },
+        {
+            en: "Knowledge is a light that no darkness can extinguish.",
+            ko: "지식은 어떤 어둠도 꺼뜨릴 수 없는 빛입니다."
+        },
+        {
+            en: "Every book you read is a conversation with a mind greater than yours.",
+            ko: "읽는 모든 책은 당신보다 위대한 마음과의 대화입니다."
+        },
+        {
+            en: "The mind is like a garden; it grows what you plant in it.",
+            ko: "마음은 정원과 같습니다. 당신이 심는 것이 자랍니다."
+        },
+        {
+            en: "A question asked in humility is worth more than an answer spoken in arrogance.",
+            ko: "겸손하게 묻는 질문은 오만하게 말하는 답보다 가치가 있습니다."
+        },
+        {
+            en: "Mistakes in learning are not failures; they are tuition fees for wisdom.",
+            ko: "학습의 실수는 실패가 아니라 지혜의 수업료입니다."
+        },
+        {
+            en: "Curiosity is the engine of achievement.",
+            ko: "호기심은 성취의 엔진입니다."
+        },
+        {
+            en: "Read to understand the world, and act to change it.",
+            ko: "세상을 이해하려면 읽고, 바꾸려면 행동하십시오."
+        },
+        {
+            en: "Wisdom is knowing what to overlook.",
+            ko: "지혜는 무엇을 무시해야 하는지 아는 것입니다."
+        },
+        {
+            en: "Teach what you learn, and you will learn it twice.",
+            ko: "배운 것을 가르치면 두 배로 배우게 됩니다."
+        },
+        {
+            en: "The more you learn, the more you realize how much you do not know.",
+            ko: "더 많이 배울수록 모르는 것이 얼마나 많은지 깨닫게 됩니다."
+        },
+        {
+            en: "Time is the only currency you cannot earn back.",
+            ko: "시간은 되돌릴 수 없는 유일한 화폐입니다."
+        },
+        {
+            en: "How you spend your hours is how you spend your life.",
+            ko: "시간을 어떻게 쓰느냐가 인생을 어떻게 쓰느냐입니다."
+        },
+        {
+            en: "Procrastination is the thief of dreams.",
+            ko: "미루기는 꿈의 도둑입니다."
+        },
+        {
+            en: "Plan your day, or your day will plan you.",
+            ko: "하루를 계획하거나, 하루가 당신을 계획할 것입니다."
+        },
+        {
+            en: "One hour of focused work is worth more than three hours of distraction.",
+            ko: "집중한 한 시간은 산만한 세 시간보다 가치가 있습니다."
+        },
+        {
+            en: "Yesterday is gone, tomorrow is uncertain, but today is a gift.",
+            ko: "어제는 지나갔고, 내일은 불확실하지만, 오늘은 선물입니다."
+        },
+        {
+            en: "Do not count the days; make the days count.",
+            ko: "날을 세지 말고, 날을 의미 있게 만드십시오."
+        },
+        {
+            en: "The best time to start was yesterday. The second best is now.",
+            ko: "시작하기 가장 좋은 때는 어제였습니다. 두 번째로 좋은 때는 지금입니다."
+        },
+        {
+            en: "A minute lost is a minute you will never meet again.",
+            ko: "잃어버린 한 분은 다시 만날 수 없는 한 분입니다."
+        },
+        {
+            en: "The morning hour has gold in its mouth.",
+            ko: "아침 시간은 입에 금을 물고 있습니다."
+        },
+        {
+            en: "Failure is not the opposite of success; it is part of it.",
+            ko: "실패는 성공의 반대가 아니라 성공의 일부입니다."
+        },
+        {
+            en: "Every fall is a lesson in how to stand stronger.",
+            ko: "모든 넘어짐은 더 강하게 일어서는 방법에 대한 교훈입니다."
+        },
+        {
+            en: "The darkest night produces the brightest stars.",
+            ko: "가장 어두운 밤이 가장 밝은 별을 낳습니다."
+        },
+        {
+            en: "Pain is a teacher that never speaks, but always instructs.",
+            ko: "고통은 결코 말하지 않지만 항상 가르치는 스승입니다."
+        },
+        {
+            en: "What breaks you today can build you tomorrow.",
+            ko: "오늘 당신을 부수는 것이 내일 당신을 만들 수 있습니다."
+        },
+        {
+            en: "Do not fear the storm; learn to sail through it.",
+            ko: "폭풍을 두려워하지 말고, 그 속을 항해하는 법을 배우십시오."
+        },
+        {
+            en: "A setback is a setup for a comeback.",
+            ko: "후퇴는 재기를 위한 준비입니다."
+        },
+        {
+            en: "Courage is not the absence of fear, but moving forward despite it.",
+            ko: "용기는 두려움이 없는 것이 아니라, 두려움에도 불구하고 나아가는 것입니다."
+        },
+        {
+            en: "The road to success is paved with obstacles you overcame.",
+            ko: "성공의 길은 당신이 극복한 장애물로 포장되어 있습니다."
+        },
+        {
+            en: "Tough times do not last, but tough people do.",
+            ko: "힘든 시간은 지나가지만, 강인한 사람은 남습니다."
+        },
+        {
+            en: "Your body is a trust given to you; take care of it.",
+            ko: "당신의 몸은 당신에게 맡겨진 신탁입니다. 잘 돌보십시오."
+        },
+        {
+            en: "A healthy mind lives in a healthy body.",
+            ko: "건강한 마음은 건강한 몸에 삽니다."
+        },
+        {
+            en: "Sleep is not laziness; it is the foundation of performance.",
+            ko: "수면은 게으름이 아니라 성과의 기초입니다."
+        },
+        {
+            en: "Move your body today so it can carry you tomorrow.",
+            ko: "오늘 몸을 움직여야 내일 몸이 당신을 지탱할 수 있습니다."
+        },
+        {
+            en: "What you eat is what you become.",
+            ko: "당신이 먹는 것이 당신이 되는 것입니다."
+        },
+        {
+            en: "Rest is not quitting; it is preparing for the next climb.",
+            ko: "휴식은 포기가 아니라 다음 등반을 위한 준비입니다."
+        },
+        {
+            en: "Water your own roots before you try to shade others.",
+            ko: "다른 사람에게 그늘을 주려면 먼저 자신의 뿌리에 물을 주십시오."
+        },
+        {
+            en: "Stress managed well becomes strength.",
+            ko: "잘 관리된 스트레스는 힘이 됩니다."
+        },
+        {
+            en: "Breathe deeply; clarity often follows a calm breath.",
+            ko: "깊게 숨쉬십시오. 맑은 생각은 차분한 호흡 뒤에 옵니다."
+        },
+        {
+            en: "Your health is the wealth you cannot buy back.",
+            ko: "건강은 되돌릴 수 없는 부입니다."
+        },
+        {
+            en: "Kind words are seeds that grow in the hearts of others.",
+            ko: "친절한 말은 다른 사람의 마음속에 자라는 씨앗입니다."
+        },
+        {
+            en: "The best relationship you can build is with your own character.",
+            ko: "당신이 쌓을 수 있는 최고의 관계는 자신의 인품과의 관계입니다."
+        },
+        {
+            en: "Listen more than you speak, and you will understand more than you know.",
+            ko: "말하는 것보다 듣고, 아는 것보다 이해하게 될 것입니다."
+        },
+        {
+            en: "Trust is built in drops and lost in buckets.",
+            ko: "신뢰는 방울로 쌓이고 통으로 잃습니다."
+        },
+        {
+            en: "Surround yourself with those who remind you of your purpose.",
+            ko: "당신의 목적을 상기시켜 주는 사람들로 자신을 둘러싸십시오."
+        },
+        {
+            en: "A sincere apology mends what pride breaks.",
+            ko: "진심 어린 사과는 자존심이 부순 것을 고칩니다."
+        },
+        {
+            en: "The strength of a team is measured by how it treats its weakest member.",
+            ko: "팀의 강함은 가장 약한 구성원을 대하는 방식으로 측정됩니다."
+        },
+        {
+            en: "Forgiveness frees the heart that gives it.",
+            ko: "용서는 용서를 주는 마음을 자유롭게 합니다."
+        },
+        {
+            en: "Good manners are the fragrance of a noble soul.",
+            ko: "좋은 예의는 고귀한 인품의 향기입니다."
+        },
+        {
+            en: "The words you leave behind echo longer than the work you do.",
+            ko: "당신이 남기는 말은 당신이 하는 일보다 오래 울려 퍼집니다."
+        },
+        {
+            en: "Trust in God, but tie your camel.",
+            ko: "하나님을 신뢰하되, 낙타를 묶어두십시오."
+        },
+        {
+            en: "Pray as if everything depends on God, then work as if everything depends on you.",
+            ko: "모든 것이 하나님께 달린 것처럼 기도하고, 모든 것이 당신에게 달린 것처럼 일하십시오."
+        },
+        {
+            en: "Faith without action is a bird without wings.",
+            ko: "행동 없는 믿음은 날개 없는 새와 같습니다."
+        },
+        {
+            en: "God does not burden a soul beyond what it can bear.",
+            ko: "하나님은 능력 밖의 짐을 지우지 않으십니다."
+        },
+        {
+            en: "After hardship comes ease, if you keep walking.",
+            ko: "어려움 뒤에는 편안함이 옵니다. 걸음을 멈추지 마십시오."
+        },
+        {
+            en: "The believer sees opportunity where others see only difficulty.",
+            ko: "신자는 다른 사람이 어려움만 보는 곳에서 기회를 봅니다."
+        },
+        {
+            en: "Sincere intention is the foundation of every good deed.",
+            ko: "진실한 의도는 모든 선행의 기초입니다."
+        },
+        {
+            en: "God's mercy is wider than your mistakes.",
+            ko: "하나님의 자비는 당신의 실수보다 넓습니다."
+        },
+        {
+            en: "Patience is the key that opens every locked door.",
+            ko: "인내는 모든 잠긴 문을 여는 열쇠입니다."
+        },
+        {
+            en: "Seek knowledge, for it is a light from your Lord.",
+            ko: "지식을 구하십시오. 그것은 주님으로부터 오는 빛입니다."
+        },
+        {
+            en: "A goal without a plan is just a wish.",
+            ko: "계획 없는 목표는 단순한 소망에 불과합니다."
+        },
+        {
+            en: "Write your goals down; they become real when they leave your head.",
+            ko: "목표를 적으십시오. 머릿속에서 나올 때 실현됩니다."
+        },
+        {
+            en: "Break big dreams into small tasks, and start with the first.",
+            ko: "큰 꿈을 작은 과업으로 나누고, 첫 번째부터 시작하십시오."
+        },
+        {
+            en: "Your direction matters more than your speed.",
+            ko: "속도보다 방향이 더 중요합니다."
+        },
+        {
+            en: "Visualize your success, then build it brick by brick.",
+            ko: "성공을 시각화하고, 벽돌 하나씩 쌓아 올리십시오."
+        },
+        {
+            en: "Review your progress weekly, or you will drift without knowing.",
+            ko: "매주 진행 상황을 검토하십시오. 그렇지 않으면 모르게 표류할 것입니다."
+        },
+        {
+            en: "The person who aims at nothing hits it every time.",
+            ko: "아무것도 목표로 하지 않는 사람은 매번 그것을 맞힙니다."
+        },
+        {
+            en: "Your calendar is a mirror of your priorities.",
+            ko: "당신의 달력은 우선순위의 거울입니다."
+        },
+        {
+            en: "Start before you are ready, or you may never start.",
+            ko: "준비가 되기 전에 시작하십시오. 그렇지 않으면 영영 시작하지 못할 수 있습니다."
+        },
+        {
+            en: "Success is the sum of small efforts repeated day in and day out.",
+            ko: "성공은 매일 반복되는 작은 노력의 합입니다."
+        },
+        {
+            en: "Comfort zones are beautiful places, but nothing grows there.",
+            ko: "안전지대는 아름다운 곳이지만, 그곳에서는 아무것도 자라지 않습니다."
+        },
+        {
+            en: "Fear is a door; courage is the key to open it.",
+            ko: "두려움은 문이고, 용기는 그 문을 여는 열쇠입니다."
+        },
+        {
+            en: "Do one thing every day that scares you a little.",
+            ko: "매일 조금 무서운 일 하나를 하십시오."
+        },
+        {
+            en: "The life you want is on the other side of the effort you fear.",
+            ko: "원하는 삶은 두려워하는 노력의 건너편에 있습니다."
+        },
+        {
+            en: "Doubt kills more dreams than failure ever will.",
+            ko: "의심은 실패보다 더 많은 꿈을 죽입니다."
+        },
+        {
+            en: "You are braver than you believe, and stronger than you seem.",
+            ko: "당신은 생각하는 것보다 용감하고, 보이는 것보다 강합니다."
+        },
+        {
+            en: "Risk calculated is better than regret guaranteed.",
+            ko: "계산된 위험이 확실한 후회보다 낫습니다."
+        },
+        {
+            en: "What you avoid today will control you tomorrow.",
+            ko: "오늘 피하는 것이 내일 당신을 지배할 것입니다."
+        },
+        {
+            en: "Leap, and the net will appear.",
+            ko: "뛰어들면 그물이 나타날 것입니다."
+        },
+        {
+            en: "The cave you fear to enter holds the treasure you seek.",
+            ko: "들어가기 두려워하는 동굴에는 찾는 보물이 있습니다."
+        },
+        {
+            en: "You are the author of your own story.",
+            ko: "당신은 자신의 이야기의 작가입니다."
+        },
+        {
+            en: "Blame no one for your choices; own them and grow.",
+            ko: "자신의 선택을 탓하지 말고, 인정하고 성장하십시오."
+        },
+        {
+            en: "Maturity is knowing when to speak and when to stay silent.",
+            ko: "성숙함은 말할 때와 침묵할 때를 아는 것입니다."
+        },
+        {
+            en: "Your reputation is built on what you do, not what you say.",
+            ko: "평판은 말이 아니라 행동으로 쌓입니다."
+        },
+        {
+            en: "Responsibility is the price of greatness.",
+            ko: "책임은 위대함의 대가입니다."
+        },
+        {
+            en: "Integrity is doing the right thing, even when no one is watching.",
+            ko: "정직은 아무도 보지 않을 때도 옳은 일을 하는 것입니다."
+        },
+        {
+            en: "Honesty is the first chapter in the book of wisdom.",
+            ko: "정직은 지혜의 책의 첫 장입니다."
+        },
+        {
+            en: "Your word is your bond; break it and you break yourself.",
+            ko: "당신의 말은 당신의 보증입니다. 그것을 깨면 자신을 깨는 것입니다."
+        },
+        {
+            en: "Truth may hurt for a moment, but lies hurt for a lifetime.",
+            ko: "진실은 잠시 아프지만, 거짓은 평생 아프게 합니다."
+        },
+        {
+            en: "Character is what you do when no one is looking.",
+            ko: "인품은 아무도 보지 않을 때 하는 것입니다."
+        }
+    ],
+
+    init() {
+        this.updateQuote();
+        setInterval(() => this.updateQuote(), 12000);
+    },
+
+    updateQuote() {
+        const quoteEl = document.getElementById('motivationalQuote');
+        if (!quoteEl) return;
+
+        const randomIndex = Math.floor(Math.random() * this.quotes.length);
+        const selectedQuote = this.quotes[randomIndex];
+
+        quoteEl.style.transition = "opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+        quoteEl.style.opacity = "0";
+
+        setTimeout(() => {
+            quoteEl.innerHTML = `
+                <span class="block text-slate-100 font-mono tracking-wide mb-1.5">${selectedQuote.en}</span>
+                <span class="block text-xs text-slate-500 font-sans" style="opacity: 0.75;">${selectedQuote.ko}</span>
+            `;
+            quoteEl.style.opacity = "1";
+        }, 400);
+    }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    QuoteSystem.init();
+});
+
+// ==========================================
+// FATIGUE TIME ENGINE (REALISTIC DAILY STRESS)
+// ==========================================
+const FatigueEngine = {
+    init() {
+        this.update();
+        setInterval(() => this.update(), 60000);
+    },
+
+    update() {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const currentTotalMinutes = (hours * 60) + minutes;
+
+        const startMinutes = 5 * 60; // 5:00 AM
+        const endMinutes = 22 * 60;  // 10:00 PM
+
+        let fatiguePercent = 0;
+
+        if (currentTotalMinutes >= endMinutes || currentTotalMinutes < startMinutes) {
+            fatiguePercent = 100;
+        } else {
+            fatiguePercent = ((currentTotalMinutes - startMinutes) / (endMinutes - startMinutes)) * 100;
+        }
+
+        const fatigueBar = document.getElementById('fatigueBar');
+        const fatigueText = document.getElementById('fatigueText');
+        
+        if (fatigueBar && fatigueText) {
+            fatigueBar.style.width = `${fatiguePercent}%`;
+            fatigueText.textContent = `${Math.floor(fatiguePercent)}%`;
+            
+            if (fatiguePercent > 80) {
+                fatigueBar.className = "absolute inset-y-0 left-0 bg-gradient-to-r from-red-900 to-red-600 shadow-[0_0_10px_rgba(220,38,38,0.4)] transition-all duration-700";
+            } else {
+                fatigueBar.className = "absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-900 to-yellow-600 shadow-[0_0_10px_rgba(202,138,4,0.4)] transition-all duration-700";
+            }
+        }
+    }
+};
+</script>
+<script>
+async function saveProgress() {
+  const dataString = JSON.stringify(appState, null, 2);
+  const defaultFileName = `progress_${new Date().toISOString().slice(0, 10)}.json`;
+
+  if ('showSaveFilePicker' in window) {
+    try {
+      const options = {
+        suggestedName: defaultFileName,
+        types: [{
+          description: 'JSON File',
+          accept: { 'application/json': ['.json'] },
+        }],
+      };
+      
+      const handle = await window.showSaveFilePicker(options);
+      const writable = await handle.createWritable();
+      await writable.write(dataString);
+      await writable.close();
+      
+      alert('File saved successfully to the selected location!');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Error during save process:', err);
+        alert('Failed to save the file, please try again.');
+      }
+    }
+  } else {
+    const customName = prompt("Enter a name for the save file:", defaultFileName.replace('.json', ''));
+    if (!customName) return;
+
+    const blob = new Blob([dataString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchor = document.createElement('a');
+    
+    downloadAnchor.href = url;
+    downloadAnchor.download = `${customName.trim()}.json`;
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  localStorage.setItem('latest_progress', JSON.stringify(appState));
+}
+</script>
+
+</body>
+</html>
