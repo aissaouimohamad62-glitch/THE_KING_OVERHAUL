@@ -363,7 +363,7 @@
             </label>
         </section>
         <button onclick="SystemReset.confirmAndReset()" class="sl-btn w-full text-left p-3 rounded-sm flex justify-between items-center group !border-rose-500 hover:!bg-rose-950/30 mt-4">
-            <span class="sys-font text-sm font-black text-rose-500 group-hover:text-rose-400" style="color: red;">⚠️ 𝐒𝐘𝐒𝐓𝐄𝐌 𝐇𝐀𝐑𝐃 𝐑𝐄𝐒𝐄𝐓</span>
+            <span class="sys-font text-sm font-black text-rose-500 group-hover:text-rose-400" style="color: red;">⚠️ System Reset</span>
             <span class="sys-font text-[10px] bg-rose-950 text-rose-500 px-2 py-0.5 border border-rose-500 animate-pulse">DANGER</span>
         </button>
     </nav>
@@ -664,14 +664,14 @@ const Toast = {
 const SystemReset = {
     confirmAndReset() {
         if(window.SoundEffects) SoundEffects.playSystemClick();
-        const firstConfirm = confirm("⚠ Sovereign Security Warning: Are you sure you want to erase all data?\n(Level resets to 1, all Gold, XP, Quests, and Logs will be lost permanently).");
+        const firstConfirm = confirm("⚠ تحذير أمني: هل أنت متأكد تماماً من رغبتك في مسح وإزالة التقدم الخاص بك؟\n(هذا الإجراء سيؤثر بشكل مباشر على تقدمك الحالي ويعيدك إلى نقطة البداية).");
         if (!firstConfirm) return;
-        const secondConfirm = confirm("‼️ Final Warning: This resets the system to zero. Execute 'Memory Wipe'?");
+        const secondConfirm = confirm("‼️ تحذير نهائي: تأكيد رغبتك في مسح كل التقدم والعودة للبداية؟");
         if (!secondConfirm) return;
         const keysToReset = ['monarch_system_data', 'sovereign_active_quest', 'directive_start_time', 'sovereign_active_program', 'SL_QUESTS', 'sovereign_system_logs','sovereign_titles_index','sl_onboarding_complete','sl_player_data'];
         keysToReset.forEach(key => localStorage.removeItem(key));
         Object.keys(localStorage).forEach(key => { if (key.startsWith('title_cache_')) localStorage.removeItem(key); });
-        alert("🔄 Memory wiped and system fully reset. Redirecting to registration portal.");
+        alert("🔄 تمت إعادة ضبط النظام ومسح التقدم بنجاح. يتم توجيهك الآن إلى البداية.");
         window.location.href = 'index.html';
     }
 };
